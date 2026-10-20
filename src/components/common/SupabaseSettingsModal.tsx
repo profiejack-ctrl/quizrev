@@ -155,13 +155,24 @@ CREATE TABLE IF NOT EXISTS public.student_answers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.quizzes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.question_choices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.quiz_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.student_answers ENABLE ROW LEVEL SECURITY;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subjects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quizzes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.questions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.question_choices DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_attempts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.student_answers DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "QuizRev Profiles Access" ON public.profiles;
+DROP POLICY IF EXISTS "QuizRev Subjects Access" ON public.subjects;
+DROP POLICY IF EXISTS "QuizRev Quizzes Access" ON public.quizzes;
+DROP POLICY IF EXISTS "QuizRev Questions Access" ON public.questions;
+DROP POLICY IF EXISTS "QuizRev Choices Access" ON public.question_choices;
+DROP POLICY IF EXISTS "QuizRev Attempts Access" ON public.quiz_attempts;
+DROP POLICY IF EXISTS "QuizRev Answers Access" ON public.student_answers;
 
 CREATE POLICY "QuizRev Profiles Access" ON public.profiles FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "QuizRev Subjects Access" ON public.subjects FOR ALL TO public USING (true) WITH CHECK (true);

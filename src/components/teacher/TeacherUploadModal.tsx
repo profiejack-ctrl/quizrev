@@ -35,7 +35,14 @@ import {
 } from 'lucide-react';
 
 export const TeacherUploadModal: React.FC = () => {
-  const { subjects, addQuiz, addSubject, setCurrentView } = useApp();
+  const { 
+    subjects, 
+    addQuiz, 
+    addSubject, 
+    setCurrentView,
+    setIsSupabaseModalOpen,
+    supabaseConfig 
+  } = useApp();
 
   const [inputMode, setInputMode] = useState<'file' | 'text'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -50,6 +57,8 @@ export const TeacherUploadModal: React.FC = () => {
   const [isGeminiModalOpen, setIsGeminiModalOpen] = useState(false);
   const [geminiConfig, setGeminiConfig] = useState(getGeminiConfig());
   const [parseError, setParseError] = useState<string | null>(null);
+  const [isSavingExam, setIsSavingExam] = useState(false);
+  const [cloudSaveError, setCloudSaveError] = useState<string | null>(null);
 
   // Form Fields
   const [quizTitle, setQuizTitle] = useState('');
@@ -326,7 +335,7 @@ export const TeacherUploadModal: React.FC = () => {
     setNewSubjectCode('');
   };
 
-  const handlePublishQuiz = () => {
+  const handlePublishQuiz = async () => {
     if (parsedQuestions.length === 0) {
       setParseError('Please parse at least one question before publishing.');
       return;
@@ -357,28 +366,45 @@ export const TeacherUploadModal: React.FC = () => {
       };
     });
 
-    addQuiz({
-      title: quizTitle || 'Mock Exam',
-      subjectId: targetSubjectId,
-      subjectName: currentSubject?.name || 'General',
-      subjectColor: currentSubject?.color || '#1b6e66',
-      description: `Uploaded mock exam containing ${finalQuestions.length} questions.`,
-      durationMinutes,
-      passingPercentage,
-      shuffleQuestions,
-      shuffleChoices,
-      questions: finalQuestions,
-      totalQuestions: finalQuestions.length,
-      sourceFilename: selectedFile?.name || 'exam_upload.txt',
-      sourceFormat: selectedFile?.name?.endsWith('.docx')
-        ? 'docx'
-        : selectedFile?.name?.endsWith('.pdf')
-        ? 'pdf'
-        : 'manual',
-      isPublished: true,
-    });
+    setIsSavingExam(true);
+    setCloudSaveError(null);
 
-    setCurrentView('home');
+    try {
+      const res = await addQuiz({
+        title: quizTitle || 'Mock Exam',
+        subjectId: targetSubjectId,
+        subjectName: currentSubject?.name || 'General',
+        subjectColor: currentSubject?.color || '#1b6e66',
+        description: `Uploaded mock exam containing ${finalQuestions.length} questions.`,
+        durationMinutes,
+        passingPercentage,
+        shuffleQuestions,
+        shuffleChoices,
+        questions: finalQuestions,
+        totalQuestions: finalQuestions.length,
+        sourceFilename: selectedFile?.name || 'exam_upload.txt',
+        sourceFormat: selectedFile?.name?.endsWith('.docx')
+          ? 'docx'
+          : selectedFile?.name?.endsWith('.pdf')
+          ? 'pdf'
+          : 'manual',
+        isPublished: true,
+      });
+
+      setIsSavingExam(false);
+
+      if (!res.success) {
+        setCloudSaveError(
+          res.error || 'Failed to sync exam to Supabase. It is saved in your local browser, but students on other devices will not see it.'
+        );
+        return;
+      }
+
+      setCurrentView('home');
+    } catch (err: any) {
+      setIsSavingExam(false);
+      setCloudSaveError(err.message || 'An error occurred while publishing the exam.');
+    }
   };
 
   return (
@@ -763,12 +789,52 @@ export const TeacherUploadModal: React.FC = () => {
 
             <button
               onClick={handlePublishQuiz}
-              className="px-5 py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm flex items-center justify-center space-x-1.5 active:scale-95"
+              disabled={isSavingExam}
+              className="px-5 py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm flex items-center justify-center space-x-1.5 active:scale-95 disabled:opacity-60"
             >
-              <Check className="w-3.5 h-3.5" />
-              <span>Publish Mock Exam</span>
+              {isSavingExam ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Publishing to Supabase...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Publish Mock Exam</span>
+                </>
+              )}
             </button>
           </div>
+
+          {cloudSaveError && (
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 text-xs text-amber-900 space-y-2">
+              <div className="flex items-center space-x-2 font-semibold text-amber-800">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>Supabase Cloud Sync Notice</span>
+              </div>
+              <p>
+                The exam is saved on this computer, but failed to sync to your Supabase Cloud database: <strong>{cloudSaveError}</strong>.
+                Students on other devices will not see this exam until Supabase tables and credentials are valid.
+              </p>
+              <div className="flex items-center space-x-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsSupabaseModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors flex items-center space-x-1"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Open Database Configuration</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('home')}
+                  className="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-800 hover:bg-amber-100/50 transition-colors"
+                >
+                  View in Dashboard
+                </button>
+              </div>
+            </div>
+          )}
 
           {parseWarnings.length > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 space-y-1">

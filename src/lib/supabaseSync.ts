@@ -41,14 +41,13 @@ export async function fetchAllFromSupabase(): Promise<SupabaseSyncResult | null>
   if (!supabase) return null;
 
   try {
-    // 1. Fetch Subjects
+    // 1. Fetch Subjects (Don't abort if this fails or is empty!)
     const { data: dbSubjects, error: subError } = await supabase
       .from('subjects')
       .select('*');
 
     if (subError) {
-      console.warn('Supabase fetch subjects failed:', subError.message);
-      return null;
+      console.warn('[QuizRev] Supabase fetch subjects error:', subError.message);
     }
 
     const subjects: Subject[] = (dbSubjects || []).map((s: any) => ({
@@ -63,7 +62,10 @@ export async function fetchAllFromSupabase(): Promise<SupabaseSyncResult | null>
     subjects.forEach(s => subjectMap.set(s.id, s));
 
     // 2. Fetch Profiles
-    const { data: dbProfiles } = await supabase.from('profiles').select('*');
+    const { data: dbProfiles, error: profError } = await supabase.from('profiles').select('*');
+    if (profError) {
+      console.warn('[QuizRev] Supabase fetch profiles error:', profError.message);
+    }
     const profiles: UserProfile[] = (dbProfiles || []).map((p: any) => ({
       id: String(p.id),
       email: p.email,
@@ -76,20 +78,32 @@ export async function fetchAllFromSupabase(): Promise<SupabaseSyncResult | null>
     }));
 
     // 3. Fetch Quizzes, Questions, and Question Choices
-    const { data: dbQuizzes } = await supabase
+    const { data: dbQuizzes, error: quizError } = await supabase
       .from('quizzes')
       .select('*')
       .order('created_at', { ascending: false });
 
-    const { data: dbQuestions } = await supabase
+    if (quizError) {
+      console.warn('[QuizRev] Supabase fetch quizzes error:', quizError.message);
+    }
+
+    const { data: dbQuestions, error: questError } = await supabase
       .from('questions')
       .select('*')
       .order('order_index', { ascending: true });
 
-    const { data: dbChoices } = await supabase
+    if (questError) {
+      console.warn('[QuizRev] Supabase fetch questions error:', questError.message);
+    }
+
+    const { data: dbChoices, error: choiceError } = await supabase
       .from('question_choices')
       .select('*')
       .order('order_index', { ascending: true });
+
+    if (choiceError) {
+      console.warn('[QuizRev] Supabase fetch choices error:', choiceError.message);
+    }
 
     // Group choices by question_id
     const choicesByQuestion = new Map<string, QuestionChoice[]>();
@@ -152,10 +166,14 @@ export async function fetchAllFromSupabase(): Promise<SupabaseSyncResult | null>
     });
 
     // 4. Fetch Attempts and Student Answers
-    const { data: dbAttempts } = await supabase
+    const { data: dbAttempts, error: attError } = await supabase
       .from('quiz_attempts')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (attError) {
+      console.warn('[QuizRev] Supabase fetch attempts error:', attError.message);
+    }
 
     const { data: dbAnswers } = await supabase
       .from('student_answers')
@@ -205,9 +223,10 @@ export async function fetchAllFromSupabase(): Promise<SupabaseSyncResult | null>
       };
     });
 
+    console.info(`[QuizRev] Fetched from Supabase: ${quizzes.length} exams, ${subjects.length} subjects, ${attempts.length} attempts, ${profiles.length} profiles.`);
     return { subjects, profiles, quizzes, attempts };
   } catch (err: any) {
-    console.warn('Failed to load from Supabase:', err);
+    console.warn('[QuizRev] Failed to load from Supabase:', err);
     return null;
   }
 }
@@ -215,12 +234,42 @@ export async function fetchAllFromSupabase(): Promise<SupabaseSyncResult | null>
 /**
  * Saves or updates a quiz and its questions & choices in Supabase
  */
-export async function saveQuizToSupabase(quiz: Quiz): Promise<boolean> {
+export async function saveQuizToSupabase(
+  quiz: Quiz,
+  subjectInfo?: Subject
+): Promise<{ success: boolean; error?: string }> {
   const supabase = getSupabaseClient();
-  if (!supabase) return false;
+  if (!supabase) {
+    return { success: false, error: 'Supabase client is not connected.' };
+  }
 
   try {
     const quizId = quiz.id;
+
+    // 0. Auto-ensure subject exists in Supabase so foreign key constraint quizzes_subject_id_fkey is satisfied!
+    try {
+      const subjectToUpsert = subjectInfo || {
+        id: quiz.subjectId,
+        name: quiz.subjectName || 'General Science',
+        code: (quiz.subjectName || 'GEN').substring(0, 10).toUpperCase().replace(/[^A-Z0-9]/g, '') || 'SUB',
+        description: 'Auto-synchronized subject for ' + quiz.title,
+        color: quiz.subjectColor || '#1b6e66',
+      };
+
+      const { error: subErr } = await supabase.from('subjects').upsert({
+        id: subjectToUpsert.id,
+        name: subjectToUpsert.name,
+        code: subjectToUpsert.code,
+        description: subjectToUpsert.description || '',
+        color: subjectToUpsert.color || '#1b6e66',
+      }, { onConflict: 'id' });
+
+      if (subErr) {
+        console.warn('[QuizRev] Subject upsert notice:', subErr.message);
+      }
+    } catch (e) {
+      console.warn('[QuizRev] Pre-saving subject notice:', e);
+    }
 
     // 1. Upsert Quiz
     const { error: quizError } = await supabase.from('quizzes').upsert({
@@ -239,8 +288,8 @@ export async function saveQuizToSupabase(quiz: Quiz): Promise<boolean> {
     });
 
     if (quizError) {
-      console.error('Error saving quiz to Supabase:', quizError);
-      return false;
+      console.error('[QuizRev] Error saving quiz to Supabase:', quizError);
+      return { success: false, error: quizError.message };
     }
 
     // 2. Upsert Questions
@@ -258,7 +307,7 @@ export async function saveQuizToSupabase(quiz: Quiz): Promise<boolean> {
       });
 
       if (qError) {
-        console.error('Error saving question to Supabase:', qError);
+        console.error('[QuizRev] Error saving question to Supabase:', qError);
         continue;
       }
 
@@ -276,10 +325,10 @@ export async function saveQuizToSupabase(quiz: Quiz): Promise<boolean> {
       }
     }
 
-    return true;
+    return { success: true };
   } catch (err: any) {
-    console.error('saveQuizToSupabase exception:', err);
-    return false;
+    console.error('[QuizRev] saveQuizToSupabase exception:', err);
+    return { success: false, error: err.message || 'Unknown save error' };
   }
 }
 
@@ -467,8 +516,8 @@ export async function pushAllLocalDataToSupabase(data: {
 
     // 3. Sync quizzes
     for (const q of data.quizzes) {
-      const ok = await saveQuizToSupabase(q);
-      if (ok) syncedQuizzes++;
+      const res = await saveQuizToSupabase(q);
+      if (res.success) syncedQuizzes++;
     }
 
     // 4. Sync attempts

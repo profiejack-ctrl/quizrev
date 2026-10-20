@@ -28,7 +28,8 @@ import {
   Sparkles, 
   Key, 
   Database,
-  Loader2 
+  Loader2,
+  RefreshCw 
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -47,6 +48,7 @@ export const App: React.FC = () => {
     setIsSupabaseModalOpen,
     supabaseConfig,
     isSyncingWithSupabase,
+    refreshFromSupabase,
   } = useApp();
 
   const [isAnswerKeyModalOpen, setIsAnswerKeyModalOpen] = useState(false);
@@ -417,12 +419,30 @@ export const App: React.FC = () => {
                 {/* Subject Selector Filter Bar */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-ink">
-                      Select Subject
-                    </h3>
-                    <span className="text-xs text-ink-muted">
-                      {filteredQuizzes.length} mock {filteredQuizzes.length === 1 ? 'exam' : 'exams'}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-base font-semibold text-ink">
+                        Select Subject
+                      </h3>
+                      <button
+                        onClick={() => refreshFromSupabase()}
+                        disabled={isSyncingWithSupabase}
+                        title="Refresh exams from cloud database"
+                        className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-surface border border-transparent hover:border-border transition-all"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      {isSyncingWithSupabase && (
+                        <span className="text-[11px] text-accent flex items-center space-x-1 animate-pulse">
+                          <span>Syncing...</span>
+                        </span>
+                      )}
+                      <span className="text-xs text-ink-muted">
+                        {filteredQuizzes.length} mock {filteredQuizzes.length === 1 ? 'exam' : 'exams'}
+                      </span>
+                    </div>
                   </div>
 
                   <SubjectSelector
@@ -446,8 +466,25 @@ export const App: React.FC = () => {
                 </div>
 
                 {filteredQuizzes.length === 0 && (
-                  <div className="bg-surface border border-border rounded-2xl p-12 text-center text-xs text-ink-muted">
-                    No mock exams uploaded for this subject yet.
+                  <div className="bg-surface border border-border rounded-2xl p-10 text-center space-y-3">
+                    <BookOpen className="w-8 h-8 text-ink-muted/50 mx-auto" />
+                    <div>
+                      <p className="text-sm font-medium text-ink">No mock exams found</p>
+                      <p className="text-xs text-ink-muted mt-1 max-w-sm mx-auto">
+                        {selectedSubjectId 
+                          ? 'No mock exams uploaded for this specific subject yet. Try selecting "All Subjects".'
+                          : 'Your teacher has not published mock exams yet, or exams are syncing from the cloud.'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => refreshFromSupabase()}
+                      disabled={isSyncingWithSupabase}
+                      className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-control bg-ground border border-border hover:border-control text-ink text-xs font-medium transition-all shadow-xs"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
+                      <span>Check for New Exams</span>
+                    </button>
                   </div>
                 )}
               </div>

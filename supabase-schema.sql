@@ -104,17 +104,22 @@ CREATE INDEX IF NOT EXISTS idx_attempts_student_id ON public.quiz_attempts(stude
 CREATE INDEX IF NOT EXISTS idx_answers_attempt_id ON public.student_answers(attempt_id);
 
 -- ====================================================================
--- Enable Row Level Security (RLS) with Public Anon Policies
+-- Permissions & Access Configuration
 -- ====================================================================
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.quizzes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.question_choices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.quiz_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.student_answers ENABLE ROW LEVEL SECURITY;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 
--- Drop existing restrictive policies if re-running
+-- Disable Row Level Security (RLS) to ensure seamless cross-device synchronization
+-- across mobile phones and laptops using the anonymous client key.
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subjects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quizzes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.questions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.question_choices DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_attempts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.student_answers DISABLE ROW LEVEL SECURITY;
+
+-- Fallback public policies (if RLS is manually re-enabled in Supabase dashboard)
 DROP POLICY IF EXISTS "QuizRev Profiles Access" ON public.profiles;
 DROP POLICY IF EXISTS "QuizRev Subjects Access" ON public.subjects;
 DROP POLICY IF EXISTS "QuizRev Quizzes Access" ON public.quizzes;
@@ -123,7 +128,6 @@ DROP POLICY IF EXISTS "QuizRev Choices Access" ON public.question_choices;
 DROP POLICY IF EXISTS "QuizRev Attempts Access" ON public.quiz_attempts;
 DROP POLICY IF EXISTS "QuizRev Answers Access" ON public.student_answers;
 
--- Grant Read & Write permissions to public (anon & authenticated clients)
 CREATE POLICY "QuizRev Profiles Access" ON public.profiles FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "QuizRev Subjects Access" ON public.subjects FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "QuizRev Quizzes Access" ON public.quizzes FOR ALL TO public USING (true) WITH CHECK (true);

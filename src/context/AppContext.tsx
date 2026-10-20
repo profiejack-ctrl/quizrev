@@ -42,7 +42,7 @@ interface AppContextType {
   addSubject: (name: string, code: string, description: string, color?: string) => Subject;
   
   quizzes: Quiz[];
-  addQuiz: (quiz: Omit<Quiz, 'id' | 'createdAt'>) => Quiz;
+  addQuiz: (quiz: Omit<Quiz, 'id' | 'createdAt'>) => Promise<{ success: boolean; error?: string; quiz: Quiz }>;
   deleteQuiz: (quizId: string) => void;
   updateQuizAnswerKeys: (quizId: string, keyMap: Map<number, { answer: string; explanation?: string }>) => { success: boolean; updatedCount: number };
   
@@ -164,19 +164,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const data = await fetchAllFromSupabase();
       if (data) {
-        if (data.subjects.length > 0) {
+        if (data.subjects && data.subjects.length > 0) {
           setSubjects(data.subjects);
           localStorage.setItem('quizrev_subjects', JSON.stringify(data.subjects));
         }
-        if (data.quizzes.length > 0) {
+        if (data.quizzes && data.quizzes.length >= 0) {
           setQuizzes(data.quizzes);
           localStorage.setItem('quizrev_quizzes', JSON.stringify(data.quizzes));
         }
-        if (data.attempts.length > 0) {
+        if (data.attempts && data.attempts.length >= 0) {
           setAttempts(data.attempts);
           localStorage.setItem('quizrev_attempts', JSON.stringify(data.attempts));
         }
-        if (data.profiles.length > 0) {
+        if (data.profiles && data.profiles.length > 0) {
           // Keep default teacher available if not in database
           const teacher = INITIAL_PROFILES[0];
           const hasTeacher = data.profiles.some(p => p.role === 'teacher');
@@ -186,7 +186,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     } catch (err) {
-      console.warn('Failed to refresh data from Supabase:', err);
+      console.warn('[QuizRev] Failed to refresh data from Supabase:', err);
     } finally {
       setIsSyncingWithSupabase(false);
     }
@@ -198,6 +198,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshFromSupabase();
     }
   }, [supabaseConfig.isConfigured]);
+
+  // Listen to window focus & tab visibility to ensure cross-device updates sync automatically
+  useEffect(() => {
+    const handleSyncOnActive = () => {
+      if (document.visibilityState === 'visible' && !isExamInProgress) {
+        refreshFromSupabase();
+      }
+    };
+
+    window.addEventListener('focus', handleSyncOnActive);
+    document.addEventListener('visibilitychange', handleSyncOnActive);
+
+    // Periodic sync every 25 seconds when student is viewing exams
+    const interval = setInterval(() => {
+      if (!isExamInProgress && document.visibilityState === 'visible') {
+        refreshFromSupabase();
+      }
+    }, 25000);
+
+    return () => {
+      window.removeEventListener('focus', handleSyncOnActive);
+      document.removeEventListener('visibilitychange', handleSyncOnActive);
+      clearInterval(interval);
+    };
+  }, [isExamInProgress]);
 
   const pushLocalToSupabase = async (): Promise<{ success: boolean; message: string }> => {
     setIsSyncingWithSupabase(true);
@@ -364,7 +389,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newSub;
   };
 
-  const addQuiz = (quizData: Omit<Quiz, 'id' | 'createdAt'>) => {
+  const addQuiz = async (quizData: Omit<Quiz, 'id' | 'createdAt'>): Promise<{ success: boolean; error?: string; quiz: Quiz }> => {
     const quizId = generateUuid();
     // Ensure all questions and choices have valid UUIDs
     const sanitizedQuestions: Question[] = quizData.questions.map((q, idx) => {
@@ -388,12 +413,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalQuestions: sanitizedQuestions.length,
       createdAt: new Date().toISOString(),
     };
+    
+    // Immediately persist locally
     setQuizzes(prev => [newQuiz, ...prev]);
 
-    // Save to Supabase
-    saveQuizToSupabase(newQuiz).catch(err => console.warn('Supabase quiz save error:', err));
-
-    return newQuiz;
+    // Save to Supabase backend and await confirmation
+    try {
+      const res = await saveQuizToSupabase(newQuiz);
+      if (!res.success) {
+        console.warn('[QuizRev] Supabase sync alert:', res.error);
+        return { success: false, error: res.error, quiz: newQuiz };
+      }
+      return { success: true, quiz: newQuiz };
+    } catch (err: any) {
+      console.error('[QuizRev] Unexpected error saving quiz to Supabase:', err);
+      return { success: false, error: err.message || 'Supabase save failed', quiz: newQuiz };
+    }
   };
 
   const deleteQuiz = (quizId: string) => {
