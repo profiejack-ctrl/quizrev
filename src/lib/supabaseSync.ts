@@ -272,7 +272,7 @@ export async function saveQuizToSupabase(
     }
 
     // 1. Upsert Quiz
-    const { error: quizError } = await supabase.from('quizzes').upsert({
+    const quizPayload: Record<string, any> = {
       id: quizId,
       subject_id: quiz.subjectId,
       title: quiz.title,
@@ -285,7 +285,35 @@ export async function saveQuizToSupabase(
       source_format: quiz.sourceFormat || 'manual',
       is_published: quiz.isPublished ?? true,
       created_at: quiz.createdAt || new Date().toISOString(),
-    });
+    };
+
+    let { error: quizError } = await supabase.from('quizzes').upsert(quizPayload);
+
+    // Schema cache fallback: If Supabase schema lacks source_filename, source_format, or other optional columns
+    if (quizError) {
+      const missingColMatch = quizError.message?.match(/Could not find the '([a-zA-Z0-9_]+)' column/i);
+      const isMissingCol = Boolean(missingColMatch) || 
+        quizError.message?.toLowerCase().includes('source_filename') ||
+        quizError.message?.toLowerCase().includes('source_format') ||
+        quizError.message?.toLowerCase().includes('is_published');
+
+      if (isMissingCol) {
+        console.warn('[QuizRev] Missing column in remote Supabase schema cache; retrying upsert with core columns:', quizError.message);
+        
+        // Remove optional/new columns
+        delete quizPayload.source_filename;
+        delete quizPayload.source_format;
+        if (quizError.message?.toLowerCase().includes('is_published')) {
+          delete quizPayload.is_published;
+        }
+        if (missingColMatch && missingColMatch[1] && missingColMatch[1] in quizPayload) {
+          delete quizPayload[missingColMatch[1]];
+        }
+
+        const retryRes = await supabase.from('quizzes').upsert(quizPayload);
+        quizError = retryRes.error;
+      }
+    }
 
     if (quizError) {
       console.error('[QuizRev] Error saving quiz to Supabase:', quizError);
@@ -297,14 +325,29 @@ export async function saveQuizToSupabase(
       const q = quiz.questions[i];
       const qId = q.id;
 
-      const { error: qError } = await supabase.from('questions').upsert({
+      const questionPayload: Record<string, any> = {
         id: qId,
         quiz_id: quizId,
         order_index: q.orderIndex || i + 1,
         question_text: q.questionText,
         points: q.points || 1,
         explanation: q.explanation || null,
-      });
+      };
+
+      let { error: qError } = await supabase.from('questions').upsert(questionPayload);
+
+      // Graceful fallback if explanation or points column is missing in older schema
+      if (qError && (
+        qError.message?.toLowerCase().includes('explanation') ||
+        qError.message?.toLowerCase().includes('points') ||
+        qError.message?.match(/Could not find the '([a-zA-Z0-9_]+)' column/i)
+      )) {
+        console.warn('[QuizRev] Retrying question upsert without optional columns:', qError.message);
+        delete questionPayload.explanation;
+        delete questionPayload.points;
+        const retryQ = await supabase.from('questions').upsert(questionPayload);
+        qError = retryQ.error;
+      }
 
       if (qError) {
         console.error('[QuizRev] Error saving question to Supabase:', qError);

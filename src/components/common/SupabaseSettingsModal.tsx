@@ -31,6 +31,7 @@ export const SupabaseSettingsModal: React.FC = () => {
   const [url, setUrl] = useState(supabaseConfig.url || '');
   const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey || '');
   const [copied, setCopied] = useState(false);
+  const [copiedFix, setCopiedFix] = useState(false);
   const [activeTab, setActiveTab] = useState<'settings' | 'sql'>('settings');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -69,6 +70,31 @@ export const SupabaseSettingsModal: React.FC = () => {
     setSyncFeedback({ success: true, message: 'Successfully refreshed local data from Supabase backend!' });
   };
 
+  const copyMigrationSql = () => {
+    const fixSql = `-- ====================================================================
+-- QuizRev — Fix Missing Columns in Existing Supabase Database
+-- Run this in your Supabase SQL Editor if you see schema cache errors:
+-- ====================================================================
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS student_id TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS points NUMERIC(4,2) NOT NULL DEFAULT 1.00;
+ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS explanation TEXT;
+
+-- Refresh Supabase PostgREST schema cache immediately
+NOTIFY pgrst, 'reload schema';`;
+
+    navigator.clipboard.writeText(fixSql);
+    setCopiedFix(true);
+    setTimeout(() => setCopiedFix(false), 2000);
+  };
+
   const copySqlSchema = () => {
     const sqlText = `-- ====================================================================
 -- QuizRev — Supabase Database Schema
@@ -85,7 +111,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   student_id TEXT,
   role TEXT NOT NULL CHECK (role IN ('teacher', 'student')) DEFAULT 'student',
   avatar_url TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 CREATE TABLE IF NOT EXISTS public.subjects (
@@ -109,7 +136,8 @@ CREATE TABLE IF NOT EXISTS public.quizzes (
   source_filename TEXT,
   source_format TEXT DEFAULT 'manual',
   is_published BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 CREATE TABLE IF NOT EXISTS public.questions (
@@ -192,7 +220,22 @@ ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO public.profiles (id, email, full_name, role, avatar_url) VALUES
   ('00000000-0000-4000-a000-000000000001', 'teacher@quizrev.edu', 'Prof. Jack Hernandez', 'teacher', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80')
-ON CONFLICT (email) DO NOTHING;`;
+ON CONFLICT (email) DO NOTHING;
+
+-- Schema migrations for existing databases
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS student_id TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS points NUMERIC(4,2) NOT NULL DEFAULT 1.00;
+ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS explanation TEXT;
+
+NOTIFY pgrst, 'reload schema';`;
 
     navigator.clipboard.writeText(sqlText);
     setCopied(true);
@@ -407,10 +450,46 @@ ON CONFLICT (email) DO NOTHING;`;
               </form>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Quick Fix Card for Existing Databases */}
+              <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-amber-900 flex items-center space-x-1.5">
+                    <Database className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Quick Fix: Missing Column / Schema Cache Error</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyMigrationSql}
+                    className="flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm"
+                  >
+                    {copiedFix ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Copied Fix!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Fix SQL</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  If you see <em>"Could not find the 'source_filename' column of 'quizzes' in the schema cache"</em>, your existing database tables just need these new columns added:
+                </p>
+                <div className="bg-[#1f201d] text-amber-200 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto">
+                  <code>ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;</code><br />
+                  <code>ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';</code><br />
+                  <code>ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;</code><br />
+                  <code>NOTIFY pgrst, 'reload schema';</code>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <p className="text-xs text-ink-muted">
-                  Run this SQL in your Supabase SQL Editor:
+                  Full Database Setup Schema:
                 </p>
                 <button
                   onClick={copySqlSchema}
@@ -424,13 +503,13 @@ ON CONFLICT (email) DO NOTHING;`;
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5" />
-                      <span>Copy SQL</span>
+                      <span>Copy Full SQL</span>
                     </>
                   )}
                 </button>
               </div>
 
-              <div className="bg-[#1f201d] text-[#e0e0e0] p-3.5 rounded-xl font-mono text-[11px] max-h-64 overflow-y-auto leading-relaxed border border-border">
+              <div className="bg-[#1f201d] text-[#e0e0e0] p-3.5 rounded-xl font-mono text-[11px] max-h-60 overflow-y-auto leading-relaxed border border-border">
                 <pre>
 {`-- 1. Profiles Table
 CREATE TABLE public.profiles (
@@ -460,6 +539,8 @@ CREATE TABLE public.quizzes (
   passing_percentage INT DEFAULT 70,
   shuffle_questions BOOLEAN DEFAULT true,
   shuffle_choices BOOLEAN DEFAULT true,
+  source_filename TEXT,
+  source_format TEXT DEFAULT 'manual',
   is_published BOOLEAN DEFAULT true
 );
 
@@ -503,7 +584,13 @@ CREATE TABLE public.student_answers (
   is_correct BOOLEAN DEFAULT false
 );
 
--- 5. Policies
+-- 5. Safe Migrations for Existing Tables
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;
+NOTIFY pgrst, 'reload schema';
+
+-- 6. Policies
 CREATE POLICY "Public Profiles" ON public.profiles FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Public Subjects" ON public.subjects FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Public Quizzes" ON public.quizzes FOR ALL TO public USING (true) WITH CHECK (true);

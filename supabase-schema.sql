@@ -1,5 +1,5 @@
 -- ====================================================================
--- QuizRev — Supabase Database Schema
+-- QuizRev - Supabase Database Schema
 -- Run this in your Supabase SQL Editor:
 -- https://app.supabase.com/project/_/sql
 -- ====================================================================
@@ -151,3 +151,22 @@ ON CONFLICT (code) DO NOTHING;
 INSERT INTO public.profiles (id, email, full_name, role, avatar_url) VALUES
   ('00000000-0000-4000-a000-000000000001', 'teacher@quizrev.edu', 'Prof. Jack Hernandez', 'teacher', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80')
 ON CONFLICT (email) DO NOTHING;
+
+-- ====================================================================
+-- Idempotent Column Migrations for Existing Databases
+-- Safely adds any new columns if the tables were created in earlier versions
+-- ====================================================================
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS student_id TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS points NUMERIC(4,2) NOT NULL DEFAULT 1.00;
+ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS explanation TEXT;
+
+-- Refresh Supabase PostgREST schema cache immediately
+NOTIFY pgrst, 'reload schema';

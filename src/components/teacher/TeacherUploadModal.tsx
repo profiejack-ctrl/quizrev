@@ -31,7 +31,9 @@ import {
   Trash2,
   Loader2,
   CheckCircle2,
-  Settings
+  Settings,
+  RefreshCw,
+  Copy
 } from 'lucide-react';
 
 export const TeacherUploadModal: React.FC = () => {
@@ -41,7 +43,8 @@ export const TeacherUploadModal: React.FC = () => {
     addSubject, 
     setCurrentView,
     setIsSupabaseModalOpen,
-    supabaseConfig 
+    supabaseConfig,
+    pushLocalToSupabase
   } = useApp();
 
   const [inputMode, setInputMode] = useState<'file' | 'text'>('file');
@@ -53,6 +56,8 @@ export const TeacherUploadModal: React.FC = () => {
   const [rawKeyText, setRawKeyText] = useState<string>('');
   const [isParsing, setIsParsing] = useState(false);
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+  const [isRetryingSync, setIsRetryingSync] = useState(false);
+  const [copiedMigrationSql, setCopiedMigrationSql] = useState(false);
   const [aiSuccessMessage, setAiSuccessMessage] = useState<string | null>(null);
   const [isGeminiModalOpen, setIsGeminiModalOpen] = useState(false);
   const [geminiConfig, setGeminiConfig] = useState(getGeminiConfig());
@@ -404,6 +409,33 @@ export const TeacherUploadModal: React.FC = () => {
     } catch (err: any) {
       setIsSavingExam(false);
       setCloudSaveError(err.message || 'An error occurred while publishing the exam.');
+    }
+  };
+
+  const handleCopyQuickFixSql = () => {
+    const sql = `ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;
+NOTIFY pgrst, 'reload schema';`;
+    navigator.clipboard.writeText(sql);
+    setCopiedMigrationSql(true);
+    setTimeout(() => setCopiedMigrationSql(false), 2000);
+  };
+
+  const handleRetrySync = async () => {
+    setIsRetryingSync(true);
+    try {
+      const res = await pushLocalToSupabase();
+      if (res.success) {
+        setCloudSaveError(null);
+        setCurrentView('home');
+      } else {
+        setCloudSaveError(res.message);
+      }
+    } catch (err: any) {
+      setCloudSaveError(err.message || 'Retry sync failed');
+    } finally {
+      setIsRetryingSync(false);
     }
   };
 
@@ -807,7 +839,7 @@ export const TeacherUploadModal: React.FC = () => {
           </div>
 
           {cloudSaveError && (
-            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 text-xs text-amber-900 space-y-2">
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 text-xs text-amber-900 space-y-3">
               <div className="flex items-center space-x-2 font-semibold text-amber-800">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                 <span>Supabase Cloud Sync Notice</span>
@@ -816,7 +848,57 @@ export const TeacherUploadModal: React.FC = () => {
                 The exam is saved on this computer, but failed to sync to your Supabase Cloud database: <strong>{cloudSaveError}</strong>.
                 Students on other devices will not see this exam until Supabase tables and credentials are valid.
               </p>
-              <div className="flex items-center space-x-2 pt-1">
+
+              {(cloudSaveError.toLowerCase().includes('source_filename') || cloudSaveError.toLowerCase().includes('schema cache')) && (
+                <div className="bg-[#1f201d] text-amber-200 rounded-lg p-3 space-y-2 border border-amber-600/30">
+                  <div className="flex items-center justify-between text-amber-400 font-sans font-semibold text-[11px]">
+                    <span>Fix in Supabase SQL Editor:</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyQuickFixSql}
+                      className="px-2 py-0.5 rounded bg-amber-600 hover:bg-amber-700 text-white font-medium flex items-center space-x-1"
+                    >
+                      {copiedMigrationSql ? (
+                        <>
+                          <Check className="w-3 h-3 text-white" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy SQL Fix</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <pre className="text-[11px] font-mono leading-tight whitespace-pre-wrap">
+{`ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';
+ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;
+NOTIFY pgrst, 'reload schema';`}
+                  </pre>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={isRetryingSync}
+                  onClick={handleRetrySync}
+                  className="px-3.5 py-1.5 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors flex items-center space-x-1.5 disabled:opacity-60 shadow-sm"
+                >
+                  {isRetryingSync ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Retrying Cloud Sync...</span>
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Retry Cloud Sync</span>
+                    </>
+                  )}
+                </button>
                 <button
                   type="button"
                   onClick={() => setIsSupabaseModalOpen(true)}
