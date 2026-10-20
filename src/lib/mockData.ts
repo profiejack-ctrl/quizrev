@@ -3,7 +3,7 @@ import { Subject, Quiz, UserProfile, QuizAttempt } from '../types/quiz';
 // Clean initial profiles - Single default teacher for immediate login
 export const INITIAL_PROFILES: UserProfile[] = [
   {
-    id: 'teacher-1',
+    id: '00000000-0000-4000-a000-000000000001',
     email: 'teacher@quizrev.edu',
     fullName: 'Prof. Jack Hernandez',
     role: 'teacher',
@@ -16,35 +16,35 @@ export const INITIAL_PROFILES: UserProfile[] = [
 // Foundational academic subjects ready for exam tagging
 export const INITIAL_SUBJECTS: Subject[] = [
   {
-    id: 'sub-sci',
+    id: '11111111-1111-4111-a111-111111111111',
     name: 'General Science',
     code: 'SCI',
     description: 'Earth Science, Biology, Chemistry & Physics fundamentals',
     color: '#1b6e66',
   },
   {
-    id: 'sub-math',
+    id: '22222222-2222-4222-a222-222222222222',
     name: 'Mathematics',
     code: 'MATH',
     description: 'Algebra, Geometry, Trigonometry, Statistics & Quantitative Problem Solving',
     color: '#2a5b88',
   },
   {
-    id: 'sub-profed',
+    id: '33333333-3333-4333-a333-333333333333',
     name: 'Professional Education',
     code: 'PROFED',
     description: 'Theories of Learning, Curriculum Development, Assessment of Learning & Teaching Ethics',
     color: '#78350f',
   },
   {
-    id: 'sub-eng',
+    id: '44444444-4444-4444-a444-444444444444',
     name: 'English & Literature',
     code: 'ENG',
     description: 'Grammar mechanics, critical comprehension, literary forms and vocabulary',
     color: '#4c1d95',
   },
   {
-    id: 'sub-hist',
+    id: '55555555-5555-4555-a555-555555555555',
     name: 'Philippine & World History',
     code: 'HIST',
     description: 'Historical timelines, governance, world civilizations and political thought',

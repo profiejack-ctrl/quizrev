@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   ChevronDown, 
-  UserCheck, 
   BookOpen, 
   BarChart2, 
   History, 
@@ -15,8 +14,6 @@ import {
 export const Navbar: React.FC = () => {
   const {
     currentUser,
-    allUsers,
-    switchUser,
     logout,
     currentView,
     setCurrentView,
@@ -158,11 +155,12 @@ export const Navbar: React.FC = () => {
         {/* Right Action Bar (User Profile & Sign Out) */}
         <div className="flex items-center space-x-2 sm:space-x-3">
           
-          {/* User Selector Dropdown */}
+          {/* User Profile & Sign Out */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center space-x-2 p-1.5 sm:px-3 sm:py-1.5 rounded-control border border-border hover:border-control transition-all bg-ground"
+              title="View account details"
             >
               <img
                 src={currentUser.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=QR'}
@@ -181,60 +179,35 @@ export const Navbar: React.FC = () => {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-ground rounded-2xl shadow-lg border border-border py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="px-3 py-2 border-b border-rule">
-                  <p className="text-xs font-semibold text-ink">
+              <div className="absolute right-0 mt-2 w-64 bg-ground rounded-2xl shadow-xl border border-border py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-4 py-3 border-b border-rule space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
+                      isTeacher ? 'bg-amber-100 text-amber-800' : 'bg-accent-light text-accent'
+                    }`}>
+                      {isTeacher ? 'Teacher Account' : 'Student Account'}
+                    </span>
+                    {currentUser.studentId && (
+                      <span className="text-[11px] text-ink-muted tabular-nums">
+                        {currentUser.studentId}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-ink leading-tight">
                     {currentUser.fullName}
                   </p>
-                  <p className="text-[11px] text-ink-muted">
+                  <p className="text-xs text-ink-muted truncate">
                     {currentUser.email}
                   </p>
                 </div>
 
-                <div className="py-1 max-h-48 overflow-y-auto">
-                  <p className="px-3 py-1 text-[10px] uppercase font-bold text-ink-muted tracking-wider">
-                    Accounts
-                  </p>
-                  {allUsers.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => {
-                        switchUser(user.id);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-surface transition-colors ${
-                        user.id === currentUser.id ? 'bg-accent-light' : ''
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <img
-                          src={user.avatarUrl}
-                          alt={user.fullName}
-                          className="w-6 h-6 rounded-full object-cover border border-border"
-                        />
-                        <div>
-                          <p className="text-xs font-medium text-ink leading-tight">
-                            {user.fullName}
-                          </p>
-                          <p className="text-[10px] text-ink-muted capitalize">
-                            {user.role}
-                          </p>
-                        </div>
-                      </div>
-                      {user.id === currentUser.id && (
-                        <UserCheck className="w-3.5 h-3.5 text-accent" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="border-t border-rule pt-1 mt-1">
+                <div className="pt-2 px-2">
                   <button
                     onClick={() => {
                       setIsDropdownOpen(false);
                       logout();
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-medium text-negative hover:bg-negative-bg/50 transition-colors flex items-center space-x-2"
+                    className="w-full text-left px-3 py-2 text-xs font-medium text-negative hover:bg-negative-bg/50 rounded-xl transition-colors flex items-center space-x-2"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Sign Out</span>

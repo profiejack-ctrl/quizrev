@@ -1,6 +1,7 @@
 -- ====================================================================
 -- QuizRev — Supabase Database Schema
--- Production-Ready Schema with RLS Policies & Sample Seed Data
+-- Run this in your Supabase SQL Editor:
+-- https://app.supabase.com/project/_/sql
 -- ====================================================================
 
 -- 1. Enable UUID Extension
@@ -8,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 2. Profiles Table (Teachers & Students)
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
   student_id TEXT,
@@ -32,7 +33,6 @@ CREATE TABLE IF NOT EXISTS public.subjects (
 CREATE TABLE IF NOT EXISTS public.quizzes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   subject_id UUID NOT NULL REFERENCES public.subjects(id) ON DELETE CASCADE,
-  created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
   duration_minutes INTEGER NOT NULL DEFAULT 30,
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.quizzes (
   shuffle_questions BOOLEAN NOT NULL DEFAULT true,
   shuffle_choices BOOLEAN NOT NULL DEFAULT true,
   source_filename TEXT,
-  source_format TEXT CHECK (source_format IN ('docx', 'pdf', 'manual', 'imported')),
+  source_format TEXT DEFAULT 'manual',
   is_published BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.question_choices (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   question_id UUID NOT NULL REFERENCES public.questions(id) ON DELETE CASCADE,
   order_index INTEGER NOT NULL DEFAULT 0,
-  choice_label TEXT NOT NULL, -- e.g. 'A', 'B', 'C', 'D'
+  choice_label TEXT NOT NULL, -- 'A', 'B', 'C', 'D'
   choice_text TEXT NOT NULL,
   is_correct BOOLEAN NOT NULL DEFAULT false
 );
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS public.student_answers (
 );
 
 -- ====================================================================
--- Indexes for Performance
+-- Indexes for High Performance
 -- ====================================================================
 CREATE INDEX IF NOT EXISTS idx_quizzes_subject_id ON public.quizzes(subject_id);
 CREATE INDEX IF NOT EXISTS idx_questions_quiz_id ON public.questions(quiz_id);
@@ -104,7 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_attempts_student_id ON public.quiz_attempts(stude
 CREATE INDEX IF NOT EXISTS idx_answers_attempt_id ON public.student_answers(attempt_id);
 
 -- ====================================================================
--- Row Level Security (RLS)
+-- Enable Row Level Security (RLS) with Public Anon Policies
 -- ====================================================================
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
@@ -114,64 +114,36 @@ ALTER TABLE public.question_choices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quiz_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_answers ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Users can view their own profile, teachers can view all profiles
-CREATE POLICY "Public profiles are readable by authenticated users" 
-  ON public.profiles FOR SELECT TO authenticated USING (true);
+-- Drop existing restrictive policies if re-running
+DROP POLICY IF EXISTS "QuizRev Profiles Access" ON public.profiles;
+DROP POLICY IF EXISTS "QuizRev Subjects Access" ON public.subjects;
+DROP POLICY IF EXISTS "QuizRev Quizzes Access" ON public.quizzes;
+DROP POLICY IF EXISTS "QuizRev Questions Access" ON public.questions;
+DROP POLICY IF EXISTS "QuizRev Choices Access" ON public.question_choices;
+DROP POLICY IF EXISTS "QuizRev Attempts Access" ON public.quiz_attempts;
+DROP POLICY IF EXISTS "QuizRev Answers Access" ON public.student_answers;
 
-CREATE POLICY "Users can update own profile" 
-  ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
-
--- Subjects: Readable by all authenticated users; only teachers can insert/update
-CREATE POLICY "Subjects are readable by all" 
-  ON public.subjects FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Teachers can insert/update subjects" 
-  ON public.subjects FOR ALL TO authenticated 
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'teacher'));
-
--- Quizzes: Readable by all; teachers can insert/update/delete
-CREATE POLICY "Quizzes are readable by authenticated users" 
-  ON public.quizzes FOR SELECT TO authenticated USING (is_published = true OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'teacher'));
-
-CREATE POLICY "Teachers manage quizzes" 
-  ON public.quizzes FOR ALL TO authenticated 
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'teacher'));
-
--- Questions: Readable by authenticated users taking quizzes or teachers
-CREATE POLICY "Questions readable by authenticated" 
-  ON public.questions FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Teachers manage questions" 
-  ON public.questions FOR ALL TO authenticated 
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'teacher'));
-
--- Question choices: Readable by authenticated
-CREATE POLICY "Choices readable by authenticated" 
-  ON public.question_choices FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Teachers manage choices" 
-  ON public.question_choices FOR ALL TO authenticated 
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'teacher'));
-
--- Quiz attempts: Students can view/insert their own attempts; Teachers can view all
-CREATE POLICY "Students manage own attempts" 
-  ON public.quiz_attempts FOR ALL TO authenticated 
-  USING (student_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'teacher'));
-
--- Student answers:
-CREATE POLICY "Students manage own answers" 
-  ON public.student_answers FOR ALL TO authenticated 
-  USING (
-    EXISTS (SELECT 1 FROM public.quiz_attempts WHERE id = student_answers.attempt_id AND (student_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'teacher')))
-  );
+-- Grant Read & Write permissions to public (anon & authenticated clients)
+CREATE POLICY "QuizRev Profiles Access" ON public.profiles FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Subjects Access" ON public.subjects FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Quizzes Access" ON public.quizzes FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Questions Access" ON public.questions FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Choices Access" ON public.question_choices FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Attempts Access" ON public.quiz_attempts FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Answers Access" ON public.student_answers FOR ALL TO public USING (true) WITH CHECK (true);
 
 -- ====================================================================
--- Sample Seed Data (Subjects)
+-- Seed Initial Academic Subjects
 -- ====================================================================
-INSERT INTO public.subjects (name, code, description, color) VALUES
-  ('General Science', 'SCI', 'Earth Science, Biology, Chemistry & Physics fundamentals', '#1b6e66'),
-  ('Mathematics', 'MATH', 'Algebra, Geometry, Trigonometry, Statistics & Calculus', '#2a5b88'),
-  ('Professional Education', 'PROFED', 'Child development, curriculum, assessment & teaching methods', '#78350f'),
-  ('English & Literature', 'ENG', 'Grammar, vocabulary, critical reading comprehension', '#4c1d95'),
-  ('Social Studies & History', 'SOC', 'World history, geography, governance & citizenship', '#831843')
+INSERT INTO public.subjects (id, name, code, description, color) VALUES
+  ('11111111-1111-4111-a111-111111111111', 'General Science', 'SCI', 'Earth Science, Biology, Chemistry & Physics fundamentals', '#1b6e66'),
+  ('22222222-2222-4222-a222-222222222222', 'Mathematics', 'MATH', 'Algebra, Geometry, Trigonometry, Statistics & Calculus', '#2a5b88'),
+  ('33333333-3333-4333-a333-333333333333', 'Professional Education', 'PROFED', 'Child development, curriculum, assessment & teaching methods', '#78350f'),
+  ('44444444-4444-4444-a444-444444444444', 'English & Literature', 'ENG', 'Grammar, vocabulary, critical reading comprehension', '#4c1d95'),
+  ('55555555-5555-4555-a555-555555555555', 'Social Studies & History', 'SOC', 'World history, geography, governance & citizenship', '#831843')
 ON CONFLICT (code) DO NOTHING;
+
+-- Seed Default Teacher Account
+INSERT INTO public.profiles (id, email, full_name, role, avatar_url) VALUES
+  ('00000000-0000-4000-a000-000000000001', 'teacher@quizrev.edu', 'Prof. Jack Hernandez', 'teacher', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80')
+ON CONFLICT (email) DO NOTHING;

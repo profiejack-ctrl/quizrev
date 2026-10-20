@@ -14,7 +14,18 @@ import {
   INITIAL_ATTEMPTS,
 } from '../lib/mockData';
 import { prepareExamSession } from '../lib/shuffle';
-import { getSupabaseClient, getSupabaseConfig, saveSupabaseConfig } from '../lib/supabase';
+import { getSupabaseConfig, saveSupabaseConfig } from '../lib/supabase';
+import {
+  fetchAllFromSupabase,
+  saveQuizToSupabase,
+  deleteQuizFromSupabase,
+  updateQuizKeysInSupabase,
+  saveSubjectToSupabase,
+  saveProfileToSupabase,
+  saveAttemptToSupabase,
+  pushAllLocalDataToSupabase,
+} from '../lib/supabaseSync';
+import { generateUuid, ensureUuid } from '../lib/uuid';
 
 const CLEAN_FLAG = 'quizrev_clean_v2_nodemo';
 
@@ -63,11 +74,14 @@ interface AppContextType {
   latestAttempt: QuizAttempt | null;
   viewAttemptDetails: (attempt: QuizAttempt) => void;
   
-  // Supabase Settings Modal
+  // Supabase Settings & Live Sync
   isSupabaseModalOpen: boolean;
   setIsSupabaseModalOpen: (open: boolean) => void;
   supabaseConfig: { url: string; anonKey: string; isConfigured: boolean };
-  updateSupabaseCredentials: (url: string, anonKey: string) => void;
+  updateSupabaseCredentials: (url: string, anonKey: string) => Promise<void>;
+  isSyncingWithSupabase: boolean;
+  pushLocalToSupabase: () => Promise<{ success: boolean; message: string }>;
+  refreshFromSupabase: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -139,6 +153,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Supabase connection state
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
   const [supabaseConfig, setSupabaseConfig] = useState(getSupabaseConfig);
+  const [isSyncingWithSupabase, setIsSyncingWithSupabase] = useState<boolean>(false);
+
+  // Function to pull all live data from Supabase
+  const refreshFromSupabase = async () => {
+    const config = getSupabaseConfig();
+    if (!config.isConfigured) return;
+
+    setIsSyncingWithSupabase(true);
+    try {
+      const data = await fetchAllFromSupabase();
+      if (data) {
+        if (data.subjects.length > 0) {
+          setSubjects(data.subjects);
+          localStorage.setItem('quizrev_subjects', JSON.stringify(data.subjects));
+        }
+        if (data.quizzes.length > 0) {
+          setQuizzes(data.quizzes);
+          localStorage.setItem('quizrev_quizzes', JSON.stringify(data.quizzes));
+        }
+        if (data.attempts.length > 0) {
+          setAttempts(data.attempts);
+          localStorage.setItem('quizrev_attempts', JSON.stringify(data.attempts));
+        }
+        if (data.profiles.length > 0) {
+          // Keep default teacher available if not in database
+          const teacher = INITIAL_PROFILES[0];
+          const hasTeacher = data.profiles.some(p => p.role === 'teacher');
+          const mergedUsers = hasTeacher ? data.profiles : [teacher, ...data.profiles];
+          setAllUsers(mergedUsers);
+          localStorage.setItem('quizrev_users', JSON.stringify(mergedUsers));
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to refresh data from Supabase:', err);
+    } finally {
+      setIsSyncingWithSupabase(false);
+    }
+  };
+
+  // Pull initial Supabase data when configured
+  useEffect(() => {
+    if (supabaseConfig.isConfigured) {
+      refreshFromSupabase();
+    }
+  }, [supabaseConfig.isConfigured]);
+
+  const pushLocalToSupabase = async (): Promise<{ success: boolean; message: string }> => {
+    setIsSyncingWithSupabase(true);
+    try {
+      const res = await pushAllLocalDataToSupabase({
+        subjects,
+        profiles: allUsers,
+        quizzes,
+        attempts,
+      });
+      return res;
+    } finally {
+      setIsSyncingWithSupabase(false);
+    }
+  };
 
   // Save changes to localStorage
   useEffect(() => {
@@ -242,7 +316,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const createStudentAccount = (data: { fullName: string; email: string; studentId: string; password?: string }) => {
     const newStudent: UserProfile = {
-      id: `student-${Date.now()}`,
+      id: generateUuid(),
       email: data.email.trim(),
       fullName: data.fullName.trim(),
       studentId: data.studentId.trim() || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -254,6 +328,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedUsers = [...allUsers, newStudent];
     setAllUsers(updatedUsers);
     localStorage.setItem('quizrev_users', JSON.stringify(updatedUsers));
+
+    // Save to Supabase
+    saveProfileToSupabase(newStudent).catch(err => console.warn('Supabase profile save error:', err));
+
     return newStudent;
   };
 
@@ -272,28 +350,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addSubject = (name: string, code: string, description: string, color = '#1b6e66') => {
     const newSub: Subject = {
-      id: `sub-${Date.now()}`,
+      id: generateUuid(),
       name,
       code: code.toUpperCase(),
       description,
       color,
     };
     setSubjects(prev => [...prev, newSub]);
+
+    // Save to Supabase
+    saveSubjectToSupabase(newSub).catch(err => console.warn('Supabase subject save error:', err));
+
     return newSub;
   };
 
   const addQuiz = (quizData: Omit<Quiz, 'id' | 'createdAt'>) => {
+    const quizId = generateUuid();
+    // Ensure all questions and choices have valid UUIDs
+    const sanitizedQuestions: Question[] = quizData.questions.map((q, idx) => {
+      const questionId = ensureUuid(q.id);
+      return {
+        ...q,
+        id: questionId,
+        orderIndex: q.orderIndex || idx + 1,
+        choices: q.choices.map((c, cIdx) => ({
+          ...c,
+          id: ensureUuid(c.id),
+          label: c.label || String.fromCharCode(65 + cIdx),
+        })),
+      };
+    });
+
     const newQuiz: Quiz = {
       ...quizData,
-      id: `quiz-${Date.now()}`,
+      id: quizId,
+      questions: sanitizedQuestions,
+      totalQuestions: sanitizedQuestions.length,
       createdAt: new Date().toISOString(),
     };
     setQuizzes(prev => [newQuiz, ...prev]);
+
+    // Save to Supabase
+    saveQuizToSupabase(newQuiz).catch(err => console.warn('Supabase quiz save error:', err));
+
     return newQuiz;
   };
 
   const deleteQuiz = (quizId: string) => {
     setQuizzes(prev => prev.filter(q => q.id !== quizId));
+    deleteQuizFromSupabase(quizId).catch(err => console.warn('Supabase delete quiz error:', err));
   };
 
   // Update answer keys for an existing quiz
@@ -302,6 +407,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     keyMap: Map<number, { answer: string; explanation?: string }>
   ) => {
     let updatedCount = 0;
+    let targetUpdatedQuestions: Question[] = [];
 
     setQuizzes(prev =>
       prev.map(q => {
@@ -326,6 +432,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
         });
 
+        targetUpdatedQuestions = updatedQuestions;
+
         return {
           ...q,
           questions: updatedQuestions,
@@ -333,15 +441,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
+    if (targetUpdatedQuestions.length > 0) {
+      updateQuizKeysInSupabase(quizId, targetUpdatedQuestions).catch(err =>
+        console.warn('Supabase update keys error:', err)
+      );
+    }
+
     return { success: true, updatedCount };
   };
 
   const recordAttempt = (attemptData: Omit<QuizAttempt, 'id'>) => {
     const newAttempt: QuizAttempt = {
       ...attemptData,
-      id: `att-${Date.now()}`,
+      id: generateUuid(),
     };
     setAttempts(prev => [newAttempt, ...prev]);
+    saveAttemptToSupabase(newAttempt).catch(err => console.warn('Supabase record attempt error:', err));
     return newAttempt;
   };
 
@@ -401,7 +516,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const passed = percentage >= activeQuiz.passingPercentage;
 
     const attempt: QuizAttempt = {
-      id: `att-${Date.now()}`,
+      id: generateUuid(),
       quizId: activeQuiz.id,
       quizTitle: activeQuiz.title,
       subjectId: activeQuiz.subjectId,
@@ -423,6 +538,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLatestAttempt(attempt);
     setIsExamInProgress(false);
     setCurrentView('quiz-result');
+
+    // Save to Supabase
+    saveAttemptToSupabase(attempt).catch(err => console.warn('Supabase save attempt error:', err));
+
     return attempt;
   };
 
@@ -443,9 +562,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentView('quiz-result');
   };
 
-  const updateSupabaseCredentials = (url: string, anonKey: string) => {
+  const updateSupabaseCredentials = async (url: string, anonKey: string) => {
     saveSupabaseConfig(url, anonKey);
-    setSupabaseConfig(getSupabaseConfig());
+    const newConfig = getSupabaseConfig();
+    setSupabaseConfig(newConfig);
+    if (newConfig.isConfigured) {
+      await refreshFromSupabase();
+    }
   };
 
   return (
@@ -489,6 +612,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsSupabaseModalOpen,
         supabaseConfig,
         updateSupabaseCredentials,
+        isSyncingWithSupabase,
+        pushLocalToSupabase,
+        refreshFromSupabase,
       }}
     >
       {children}

@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Database, CheckCircle, Copy, Check, ExternalLink, Key, Globe } from 'lucide-react';
+import { testSupabaseConnection } from '../../lib/supabaseSync';
+import { 
+  X, 
+  Database, 
+  CheckCircle, 
+  Copy, 
+  Check, 
+  ExternalLink, 
+  Key, 
+  Globe,
+  Loader2,
+  UploadCloud,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2
+} from 'lucide-react';
 
 export const SupabaseSettingsModal: React.FC = () => {
   const {
@@ -8,6 +23,9 @@ export const SupabaseSettingsModal: React.FC = () => {
     setIsSupabaseModalOpen,
     supabaseConfig,
     updateSupabaseCredentials,
+    isSyncingWithSupabase,
+    pushLocalToSupabase,
+    refreshFromSupabase,
   } = useApp();
 
   const [url, setUrl] = useState(supabaseConfig.url || '');
@@ -15,12 +33,23 @@ export const SupabaseSettingsModal: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'settings' | 'sql'>('settings');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [syncFeedback, setSyncFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   if (!isSupabaseModalOpen) return null;
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    setTestResult(null);
+    const res = await testSupabaseConnection(url, anonKey);
+    setIsTesting(false);
+    setTestResult(res);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateSupabaseCredentials(url, anonKey);
+    await updateSupabaseCredentials(url, anonKey);
     setSaveSuccess(true);
     setTimeout(() => {
       setSaveSuccess(false);
@@ -28,13 +57,29 @@ export const SupabaseSettingsModal: React.FC = () => {
     }, 1200);
   };
 
+  const handlePushToCloud = async () => {
+    setSyncFeedback(null);
+    const res = await pushLocalToSupabase();
+    setSyncFeedback(res);
+  };
+
+  const handlePullFromCloud = async () => {
+    setSyncFeedback(null);
+    await refreshFromSupabase();
+    setSyncFeedback({ success: true, message: 'Successfully refreshed local data from Supabase backend!' });
+  };
+
   const copySqlSchema = () => {
-    const sqlText = `-- QuizRev Supabase Schema
+    const sqlText = `-- ====================================================================
+-- QuizRev — Supabase Database Schema
 -- Run this in your Supabase SQL Editor:
 -- https://app.supabase.com/project/_/sql
+-- ====================================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
   student_id TEXT,
@@ -44,7 +89,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 CREATE TABLE IF NOT EXISTS public.subjects (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE,
   code TEXT NOT NULL UNIQUE,
   description TEXT,
@@ -53,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.subjects (
 );
 
 CREATE TABLE IF NOT EXISTS public.quizzes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   subject_id UUID NOT NULL REFERENCES public.subjects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
@@ -61,12 +106,14 @@ CREATE TABLE IF NOT EXISTS public.quizzes (
   passing_percentage INTEGER NOT NULL DEFAULT 70,
   shuffle_questions BOOLEAN NOT NULL DEFAULT true,
   shuffle_choices BOOLEAN NOT NULL DEFAULT true,
+  source_filename TEXT,
+  source_format TEXT DEFAULT 'manual',
   is_published BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 CREATE TABLE IF NOT EXISTS public.questions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quiz_id UUID NOT NULL REFERENCES public.quizzes(id) ON DELETE CASCADE,
   order_index INTEGER NOT NULL DEFAULT 0,
   question_text TEXT NOT NULL,
@@ -76,7 +123,7 @@ CREATE TABLE IF NOT EXISTS public.questions (
 );
 
 CREATE TABLE IF NOT EXISTS public.question_choices (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   question_id UUID NOT NULL REFERENCES public.questions(id) ON DELETE CASCADE,
   order_index INTEGER NOT NULL DEFAULT 0,
   choice_label TEXT NOT NULL,
@@ -85,7 +132,7 @@ CREATE TABLE IF NOT EXISTS public.question_choices (
 );
 
 CREATE TABLE IF NOT EXISTS public.quiz_attempts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quiz_id UUID NOT NULL REFERENCES public.quizzes(id) ON DELETE CASCADE,
   student_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   started_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
@@ -97,7 +144,44 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
   percentage NUMERIC(5,2) NOT NULL DEFAULT 0,
   passed BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);`;
+);
+
+CREATE TABLE IF NOT EXISTS public.student_answers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  attempt_id UUID NOT NULL REFERENCES public.quiz_attempts(id) ON DELETE CASCADE,
+  question_id UUID NOT NULL REFERENCES public.questions(id) ON DELETE CASCADE,
+  selected_choice_id UUID REFERENCES public.question_choices(id) ON DELETE SET NULL,
+  is_correct BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quizzes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.question_choices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quiz_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.student_answers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "QuizRev Profiles Access" ON public.profiles FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Subjects Access" ON public.subjects FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Quizzes Access" ON public.quizzes FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Questions Access" ON public.questions FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Choices Access" ON public.question_choices FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Attempts Access" ON public.quiz_attempts FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "QuizRev Answers Access" ON public.student_answers FOR ALL TO public USING (true) WITH CHECK (true);
+
+INSERT INTO public.subjects (id, name, code, description, color) VALUES
+  ('11111111-1111-4111-a111-111111111111', 'General Science', 'SCI', 'Earth Science, Biology, Chemistry & Physics fundamentals', '#1b6e66'),
+  ('22222222-2222-4222-a222-222222222222', 'Mathematics', 'MATH', 'Algebra, Geometry, Trigonometry, Statistics & Calculus', '#2a5b88'),
+  ('33333333-3333-4333-a333-333333333333', 'Professional Education', 'PROFED', 'Child development, curriculum, assessment & teaching methods', '#78350f'),
+  ('44444444-4444-4444-a444-444444444444', 'English & Literature', 'ENG', 'Grammar, vocabulary, critical reading comprehension', '#4c1d95'),
+  ('55555555-5555-4555-a555-555555555555', 'Social Studies & History', 'SOC', 'World history, geography, governance & citizenship', '#831843')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO public.profiles (id, email, full_name, role, avatar_url) VALUES
+  ('00000000-0000-4000-a000-000000000001', 'teacher@quizrev.edu', 'Prof. Jack Hernandez', 'teacher', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80')
+ON CONFLICT (email) DO NOTHING;`;
 
     navigator.clipboard.writeText(sqlText);
     setCopied(true);
@@ -119,7 +203,7 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
                 Database Configuration
               </h3>
               <p className="text-xs text-ink-muted">
-                QuizRev Supabase Integration & Schema
+                QuizRev Live Supabase Cloud Sync & Persistence
               </p>
             </div>
           </div>
@@ -141,7 +225,7 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
                 : 'border-transparent text-ink-muted hover:text-ink'
             }`}
           >
-            API Credentials
+            API Credentials & Sync
           </button>
           <button
             onClick={() => setActiveTab('sql')}
@@ -158,7 +242,7 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
         {/* Body Content */}
         <div className="p-6 overflow-y-auto space-y-4">
           {activeTab === 'settings' ? (
-            <form onSubmit={handleSave} className="space-y-4">
+            <div className="space-y-4">
               {/* Status Box */}
               <div className={`p-3.5 rounded-xl border text-xs flex items-start space-x-3 ${
                 supabaseConfig.isConfigured 
@@ -174,66 +258,143 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
                   </p>
                   <p className="mt-0.5 opacity-90 leading-relaxed">
                     {supabaseConfig.isConfigured
-                      ? 'QuizRev is synced with your Supabase backend project.'
-                      : 'All quizzes, attempts, and accounts are stored securely in browser storage. Enter your Supabase Project URL and Anon Key below to hook up to your live Supabase cloud database.'}
+                      ? 'QuizRev is actively synchronizing exams, student accounts, and test attempts to your Supabase backend.'
+                      : 'Data is currently saved only on this machine. Enter your Supabase Project URL and Anon Key below to automatically save and share mock exams across all devices.'}
                   </p>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
-                  <Globe className="w-3.5 h-3.5 text-ink-muted" />
-                  <span>Supabase Project URL</span>
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://xyzcompany.supabase.co"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-surface"
-                />
-              </div>
+              {/* Cloud Sync Actions Bar (When Configured) */}
+              {supabaseConfig.isConfigured && (
+                <div className="p-3 bg-surface border border-border rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-ink">Cloud Data Synchronization</span>
+                    {isSyncingWithSupabase && (
+                      <span className="text-[11px] text-accent flex items-center space-x-1 animate-pulse">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Syncing...</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      disabled={isSyncingWithSupabase}
+                      onClick={handlePushToCloud}
+                      className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium hover:bg-accent-hover transition-colors flex items-center space-x-1.5"
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>Push Local Data to Supabase</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSyncingWithSupabase}
+                      onClick={handlePullFromCloud}
+                      className="px-3 py-1.5 rounded-lg border border-border bg-ground text-ink text-xs font-medium hover:bg-surface transition-colors flex items-center space-x-1.5"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Pull Cloud Data</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
-              <div>
-                <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
-                  <Key className="w-3.5 h-3.5 text-ink-muted" />
-                  <span>Supabase Anon Public API Key</span>
-                </label>
-                <input
-                  type="password"
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  value={anonKey}
-                  onChange={(e) => setAnonKey(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-surface font-mono"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-between">
-                <a
-                  href="https://supabase.com/dashboard"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-accent hover:underline flex items-center space-x-1"
-                >
-                  <span>Open Supabase Dashboard</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5"
-                >
-                  {saveSuccess ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Saved!</span>
-                    </>
+              {syncFeedback && (
+                <div className={`p-3 rounded-xl border text-xs flex items-center space-x-2 ${
+                  syncFeedback.success
+                    ? 'bg-positive-bg/40 border-positive/30 text-positive-ink'
+                    : 'bg-negative-bg/50 border-negative/30 text-negative-ink'
+                }`}>
+                  {syncFeedback.success ? (
+                    <CheckCircle2 className="w-4 h-4 text-positive flex-shrink-0" />
                   ) : (
-                    <span>Save Connection</span>
+                    <AlertCircle className="w-4 h-4 text-negative flex-shrink-0" />
                   )}
-                </button>
-              </div>
-            </form>
+                  <span>{syncFeedback.message}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSave} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
+                    <Globe className="w-3.5 h-3.5 text-ink-muted" />
+                    <span>Supabase Project URL *</span>
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://xyzcompany.supabase.co"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-surface"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
+                    <Key className="w-3.5 h-3.5 text-ink-muted" />
+                    <span>Supabase Anon Public API Key *</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={anonKey}
+                    onChange={(e) => setAnonKey(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-surface font-mono"
+                  />
+                </div>
+
+                {testResult && (
+                  <div className={`p-3 rounded-xl border text-xs flex items-center space-x-2 ${
+                    testResult.success
+                      ? 'bg-positive-bg/40 border-positive/30 text-positive-ink'
+                      : 'bg-negative-bg/50 border-negative/30 text-negative-ink'
+                  }`}>
+                    {testResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 text-positive flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-negative flex-shrink-0" />
+                    )}
+                    <span>{testResult.message}</span>
+                  </div>
+                )}
+
+                <div className="pt-2 flex items-center justify-between border-t border-rule">
+                  <button
+                    type="button"
+                    disabled={isTesting || !url.trim() || !anonKey.trim()}
+                    onClick={handleTestConnection}
+                    className="px-3.5 py-2 rounded-control border border-border text-xs font-medium text-ink bg-ground hover:bg-surface transition-colors flex items-center space-x-1.5 disabled:opacity-50"
+                  >
+                    {isTesting ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
+                        <span>Testing...</span>
+                      </>
+                    ) : (
+                      <span>Test Connection</span>
+                    )}
+                  </button>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5"
+                    >
+                      {saveSuccess ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Connected!</span>
+                        </>
+                      ) : (
+                        <span>Save Connection</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           ) : (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -262,36 +423,87 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
                 <pre>
 {`-- 1. Profiles Table
 CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
+  student_id TEXT,
   role TEXT DEFAULT 'student',
-  student_id TEXT
+  avatar_url TEXT
 );
 
--- 2. Quizzes & Questions
+-- 2. Subjects & Quizzes
+CREATE TABLE public.subjects (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL UNIQUE,
+  code TEXT NOT NULL UNIQUE,
+  description TEXT,
+  color TEXT DEFAULT '#1b6e66'
+);
+
 CREATE TABLE public.quizzes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  subject_id UUID REFERENCES subjects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
-  subject_id UUID REFERENCES subjects(id),
+  description TEXT,
   duration_minutes INT DEFAULT 30,
+  passing_percentage INT DEFAULT 70,
   shuffle_questions BOOLEAN DEFAULT true,
-  shuffle_choices BOOLEAN DEFAULT true
+  shuffle_choices BOOLEAN DEFAULT true,
+  is_published BOOLEAN DEFAULT true
 );
 
--- 3. Attempts & Scores
+-- 3. Questions & Choices
+CREATE TABLE public.questions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+  order_index INT DEFAULT 0,
+  question_text TEXT NOT NULL,
+  points NUMERIC(4,2) DEFAULT 1.00,
+  explanation TEXT
+);
+
+CREATE TABLE public.question_choices (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
+  order_index INT DEFAULT 0,
+  choice_label TEXT NOT NULL,
+  choice_text TEXT NOT NULL,
+  is_correct BOOLEAN DEFAULT false
+);
+
+-- 4. Attempts & Answers
 CREATE TABLE public.quiz_attempts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  quiz_id UUID REFERENCES quizzes(id),
-  student_id UUID REFERENCES profiles(id),
-  score NUMERIC(5,2),
-  percentage NUMERIC(5,2),
-  passed BOOLEAN
-);`}
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  time_spent_seconds INT DEFAULT 0,
+  total_questions INT DEFAULT 0,
+  correct_answers INT DEFAULT 0,
+  score NUMERIC(5,2) DEFAULT 0,
+  percentage NUMERIC(5,2) DEFAULT 0,
+  passed BOOLEAN DEFAULT false
+);
+
+CREATE TABLE public.student_answers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  attempt_id UUID REFERENCES quiz_attempts(id) ON DELETE CASCADE,
+  question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
+  selected_choice_id UUID REFERENCES question_choices(id) ON DELETE SET NULL,
+  is_correct BOOLEAN DEFAULT false
+);
+
+-- 5. Policies
+CREATE POLICY "Public Profiles" ON public.profiles FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Public Subjects" ON public.subjects FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Public Quizzes" ON public.quizzes FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Public Questions" ON public.questions FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Public Choices" ON public.question_choices FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Public Attempts" ON public.quiz_attempts FOR ALL TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Public Answers" ON public.student_answers FOR ALL TO public USING (true) WITH CHECK (true);`}
                 </pre>
               </div>
               <p className="text-[11px] text-ink-muted">
-                Tip: You can also find the complete script in <code className="bg-surface px-1 py-0.5 rounded border border-border">supabase-schema.sql</code> in the project directory.
+                Tip: The full script with seed academic subjects is located at <code className="bg-surface px-1 py-0.5 rounded border border-border">supabase-schema.sql</code>.
               </p>
             </div>
           )}

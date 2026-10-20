@@ -27,7 +27,8 @@ import {
   ArrowRight, 
   Sparkles, 
   Key, 
-  Database 
+  Database,
+  Loader2 
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -45,6 +46,7 @@ export const App: React.FC = () => {
     isExamInProgress,
     setIsSupabaseModalOpen,
     supabaseConfig,
+    isSyncingWithSupabase,
   } = useApp();
 
   const [isAnswerKeyModalOpen, setIsAnswerKeyModalOpen] = useState(false);
@@ -219,12 +221,19 @@ export const App: React.FC = () => {
                     className="px-3.5 py-2.5 rounded-control border border-border bg-surface hover:bg-[#f0f0ee] text-xs font-medium transition-colors active:scale-95 flex items-center space-x-2"
                     title="Configure Supabase Database"
                   >
-                    <Database className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-ink">Supabase DB</span>
+                    {isSyncingWithSupabase ? (
+                      <Loader2 className="w-3.5 h-3.5 text-accent animate-spin" />
+                    ) : (
+                      <Database className="w-3.5 h-3.5 text-accent" />
+                    )}
+                    <span className="text-ink">
+                      {isSyncingWithSupabase ? 'Syncing...' : 'Supabase DB'}
+                    </span>
                     <span
                       className={`w-2 h-2 rounded-full ${
                         supabaseConfig.isConfigured ? 'bg-positive' : 'bg-warning'
                       }`}
+                      title={supabaseConfig.isConfigured ? 'Supabase Connected' : 'Local Storage Mode'}
                     />
                   </button>
 

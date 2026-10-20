@@ -11,6 +11,7 @@ import {
   analyzeExamWithGemini 
 } from '../../lib/geminiAgent';
 import { GeminiConfigModal } from './GeminiConfigModal';
+import { generateUuid } from '../../lib/uuid';
 import { SAMPLE_EXAM_TEXT } from '../../lib/mockData';
 import { ParsedQuestionResult, Question } from '../../types/quiz';
 import { 
@@ -338,20 +339,23 @@ export const TeacherUploadModal: React.FC = () => {
 
     const currentSubject = subjects.find((s) => s.id === targetSubjectId);
 
-    // Convert parsed questions into full Question objects
-    const finalQuestions: Question[] = parsedQuestions.map((pq, qIdx) => ({
-      id: `q-${Date.now()}-${qIdx}`,
-      orderIndex: qIdx + 1,
-      questionText: pq.questionText,
-      points: 1,
-      explanation: pq.explanation,
-      choices: pq.choices.map((c, cIdx) => ({
-        id: `c-${Date.now()}-${qIdx}-${cIdx}`,
-        label: c.label,
-        text: c.text,
-        isCorrect: c.isCorrect,
-      })),
-    }));
+    // Convert parsed questions into full Question objects with standard UUIDs
+    const finalQuestions: Question[] = parsedQuestions.map((pq, qIdx) => {
+      const questionId = generateUuid();
+      return {
+        id: questionId,
+        orderIndex: qIdx + 1,
+        questionText: pq.questionText,
+        points: 1,
+        explanation: pq.explanation,
+        choices: pq.choices.map((c, cIdx) => ({
+          id: generateUuid(),
+          label: c.label || String.fromCharCode(65 + cIdx),
+          text: c.text,
+          isCorrect: c.isCorrect,
+        })),
+      };
+    });
 
     addQuiz({
       title: quizTitle || 'Mock Exam',
