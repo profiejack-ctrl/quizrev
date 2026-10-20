@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ground: #ffffff;
+    --surface: #f9f9f9;
+    --raised: #ffffff;
+    --border: #eaeaea;
+    --rule: #f3f3f3;
+    --control: #d9d9d6;
+    --ink: #1f201d;
+    --ink-muted: #636361;
+    --ink-subtle: #8c8c88;
+    --accent: #1b6e66;
+    --positive: #2e7d32;
+    --negative: #b42318;
+    --warning: #92400e;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    font-family: "Instrument Sans", Inter, system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background-color: var(--ground);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* Academic & revision numbers format cleanly */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom scrollbar for mobile drawers & code previews */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f9f9f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9d9d6;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #636361;
+}
+
+/* Mobile-first bottom safe area support */
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
