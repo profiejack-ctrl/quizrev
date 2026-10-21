@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { QuizAttempt } from '../../types/quiz';
 import { 
@@ -10,15 +10,21 @@ import {
   ChevronRight, 
   X, 
   Check, 
-  Lightbulb 
+  Lightbulb,
+  RefreshCw 
 } from 'lucide-react';
 
 export const AttemptsHistoryView: React.FC = () => {
-  const { attempts, subjects, quizzes } = useApp();
+  const { attempts, subjects, quizzes, refreshFromSupabase, isSyncingWithSupabase } = useApp();
 
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [inspectingAttempt, setInspectingAttempt] = useState<QuizAttempt | null>(null);
+
+  // Auto-refresh attempts when opening this screen
+  useEffect(() => {
+    refreshFromSupabase();
+  }, []);
 
   // Filters
   const filteredAttempts = attempts.filter((att) => {
@@ -48,9 +54,19 @@ export const AttemptsHistoryView: React.FC = () => {
     <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-6 pb-24 md:pb-12">
       {/* Header */}
       <div>
-        <h2 className="font-serif text-2xl font-bold text-ink">
-          Student Exam Attempts & Scores
-        </h2>
+        <div className="flex items-center space-x-2">
+          <h2 className="font-serif text-2xl font-bold text-ink">
+            Student Exam Attempts & Scores
+          </h2>
+          <button
+            onClick={() => refreshFromSupabase()}
+            disabled={isSyncingWithSupabase}
+            title="Refresh attempts from cloud database"
+            className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-surface border border-transparent hover:border-border transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
+          </button>
+        </div>
         <p className="text-xs text-ink-muted">
           Comprehensive gradebook and item-response tracking for all student submissions.
         </p>

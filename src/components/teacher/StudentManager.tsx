@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Users, 
@@ -8,11 +8,14 @@ import {
   CheckCircle2, 
   X, 
   ExternalLink, 
-  Check 
+  Check,
+  RefreshCw,
+  Loader2,
+  AlertCircle 
 } from 'lucide-react';
 
 export const StudentManager: React.FC = () => {
-  const { allUsers, attempts, createStudentAccount, switchUser } = useApp();
+  const { allUsers, attempts, createStudentAccount, switchUser, refreshFromSupabase, isSyncingWithSupabase } = useApp();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [fullName, setFullName] = useState('');
@@ -21,6 +24,13 @@ export const StudentManager: React.FC = () => {
   const [tempPassword, setTempPassword] = useState('QuizRev@2026');
   const [searchTerm, setSearchTerm] = useState('');
   const [successMsg, setSuccessMsg] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  // Auto-refresh when opening Student Directory
+  useEffect(() => {
+    refreshFromSupabase();
+  }, []);
 
   const students = allUsers.filter((u) => u.role === 'student');
 
@@ -31,15 +41,26 @@ export const StudentManager: React.FC = () => {
       (s.studentId && s.studentId.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleCreateStudent = (e: React.FormEvent) => {
+  const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim()) return;
 
-    createStudentAccount({
+    setIsCreating(true);
+    setCreateError(null);
+
+    const res = await createStudentAccount({
       fullName: fullName.trim(),
       email: email.trim(),
       studentId: studentId.trim() || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
+      password: tempPassword || 'QuizRev@2026',
     });
+
+    setIsCreating(false);
+
+    if (!res.success && res.error) {
+      setCreateError(res.error);
+      return;
+    }
 
     setSuccessMsg(true);
     setTimeout(() => {
@@ -56,9 +77,19 @@ export const StudentManager: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-serif text-2xl font-bold text-ink">
-            Student Account Directory
-          </h2>
+          <div className="flex items-center space-x-2">
+            <h2 className="font-serif text-2xl font-bold text-ink">
+              Student Account Directory
+            </h2>
+            <button
+              onClick={() => refreshFromSupabase()}
+              disabled={isSyncingWithSupabase}
+              title="Refresh students from cloud database"
+              className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-surface border border-transparent hover:border-border transition-all"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
+            </button>
+          </div>
           <p className="text-xs text-ink-muted">
             Manage enrolled students, create accounts, and monitor individual revision activity.
           </p>
@@ -228,6 +259,13 @@ export const StudentManager: React.FC = () => {
                 />
               </div>
 
+              {createError && (
+                <div className="p-3 bg-negative-bg/50 border border-negative/30 rounded-xl text-negative-ink text-xs flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{createError}</span>
+                </div>
+              )}
+
               <div className="pt-2 flex items-center justify-end space-x-2">
                 <button
                   type="button"
@@ -238,9 +276,15 @@ export const StudentManager: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm flex items-center space-x-1"
+                  disabled={isCreating}
+                  className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm flex items-center space-x-1 disabled:opacity-60"
                 >
-                  {successMsg ? (
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving to Cloud...</span>
+                    </>
+                  ) : successMsg ? (
                     <>
                       <Check className="w-3.5 h-3.5" />
                       <span>Created!</span>

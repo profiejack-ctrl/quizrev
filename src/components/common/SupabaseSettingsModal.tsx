@@ -82,6 +82,7 @@ ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT N
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS student_id TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password TEXT DEFAULT 'student123';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
 
 ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS points NUMERIC(4,2) NOT NULL DEFAULT 1.00;
@@ -111,6 +112,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   student_id TEXT,
   role TEXT NOT NULL CHECK (role IN ('teacher', 'student')) DEFAULT 'student',
   avatar_url TEXT,
+  password TEXT DEFAULT 'student123',
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -230,6 +232,7 @@ ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT N
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS student_id TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password TEXT DEFAULT 'student123';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
 
 ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS points NUMERIC(4,2) NOT NULL DEFAULT 1.00;

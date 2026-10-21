@@ -1,5 +1,5 @@
 -- ====================================================================
--- QuizRev - Supabase Database Schema
+-- QuizRev — Supabase Database Schema
 -- Run this in your Supabase SQL Editor:
 -- https://app.supabase.com/project/_/sql
 -- ====================================================================
@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   student_id TEXT,
   role TEXT NOT NULL CHECK (role IN ('teacher', 'student')) DEFAULT 'student',
   avatar_url TEXT,
+  password TEXT DEFAULT 'student123',
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -148,8 +149,8 @@ INSERT INTO public.subjects (id, name, code, description, color) VALUES
 ON CONFLICT (code) DO NOTHING;
 
 -- Seed Default Teacher Account
-INSERT INTO public.profiles (id, email, full_name, role, avatar_url) VALUES
-  ('00000000-0000-4000-a000-000000000001', 'teacher@quizrev.edu', 'Prof. Jack Hernandez', 'teacher', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80')
+INSERT INTO public.profiles (id, email, full_name, role, avatar_url, password) VALUES
+  ('00000000-0000-4000-a000-000000000001', 'teacher@quizrev.edu', 'Prof. Jack Hernandez', 'teacher', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80', 'admin123')
 ON CONFLICT (email) DO NOTHING;
 
 -- ====================================================================
@@ -163,6 +164,7 @@ ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT N
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS student_id TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS password TEXT DEFAULT 'student123';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
 
 ALTER TABLE public.questions ADD COLUMN IF NOT EXISTS points NUMERIC(4,2) NOT NULL DEFAULT 1.00;

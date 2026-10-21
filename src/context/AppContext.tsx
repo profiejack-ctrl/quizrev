@@ -35,8 +35,8 @@ interface AppContextType {
   login: (emailOrId: string, password?: string) => { success: boolean; message?: string };
   logout: () => void;
   switchUser: (userId: string) => void;
-  createStudentAccount: (data: { fullName: string; email: string; studentId: string; password?: string }) => UserProfile;
-  registerStudent: (data: { fullName: string; email: string; studentId?: string; password?: string }) => UserProfile;
+  createStudentAccount: (data: { fullName: string; email: string; studentId: string; password?: string }) => Promise<{ success: boolean; error?: string; user?: UserProfile }>;
+  registerStudent: (data: { fullName: string; email: string; studentId?: string; password?: string }) => Promise<{ success: boolean; error?: string; user?: UserProfile }>;
   
   subjects: Subject[];
   addSubject: (name: string, code: string, description: string, color?: string) => Subject;
@@ -173,16 +173,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           localStorage.setItem('quizrev_quizzes', JSON.stringify(data.quizzes));
         }
         if (data.attempts && data.attempts.length >= 0) {
-          setAttempts(data.attempts);
-          localStorage.setItem('quizrev_attempts', JSON.stringify(data.attempts));
+          // Merge local and remote attempts by ID so recently submitted attempts aren't lost
+          setAttempts(prev => {
+            const attemptMap = new Map<string, QuizAttempt>();
+            prev.forEach(a => attemptMap.set(a.id, a));
+            data.attempts.forEach(a => attemptMap.set(a.id, a));
+            const merged = Array.from(attemptMap.values())
+              .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+            localStorage.setItem('quizrev_attempts', JSON.stringify(merged));
+            return merged;
+          });
         }
         if (data.profiles && data.profiles.length > 0) {
-          // Keep default teacher available if not in database
-          const teacher = INITIAL_PROFILES[0];
-          const hasTeacher = data.profiles.some(p => p.role === 'teacher');
-          const mergedUsers = hasTeacher ? data.profiles : [teacher, ...data.profiles];
-          setAllUsers(mergedUsers);
-          localStorage.setItem('quizrev_users', JSON.stringify(mergedUsers));
+          // Merge profiles by ID
+          setAllUsers(prev => {
+            const userMap = new Map<string, UserProfile>();
+            prev.forEach(u => userMap.set(u.id, u));
+            data.profiles.forEach(p => userMap.set(p.id, p));
+            // Keep default teacher available if not in database
+            const teacher = INITIAL_PROFILES[0];
+            const hasTeacher = Array.from(userMap.values()).some(p => p.role === 'teacher');
+            if (!hasTeacher) {
+              userMap.set(teacher.id, teacher);
+            }
+            const merged = Array.from(userMap.values());
+            localStorage.setItem('quizrev_users', JSON.stringify(merged));
+            return merged;
+          });
         }
       }
     } catch (err) {
@@ -339,10 +356,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const createStudentAccount = (data: { fullName: string; email: string; studentId: string; password?: string }) => {
+  const createStudentAccount = async (data: { fullName: string; email: string; studentId: string; password?: string }): Promise<{ success: boolean; error?: string; user: UserProfile }> => {
+    const cleanEmail = data.email.trim().toLowerCase();
+
+    // Check if account with this email already exists in local list
+    const existing = allUsers.find(u => u.email.toLowerCase() === cleanEmail);
+    if (existing) {
+      return { success: false, error: 'An account with this email is already registered.', user: existing };
+    }
+
     const newStudent: UserProfile = {
       id: generateUuid(),
-      email: data.email.trim(),
+      email: cleanEmail,
       fullName: data.fullName.trim(),
       studentId: data.studentId.trim() || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
       role: 'student',
@@ -350,27 +375,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
       password: data.password || 'student123',
     };
+
     const updatedUsers = [...allUsers, newStudent];
     setAllUsers(updatedUsers);
     localStorage.setItem('quizrev_users', JSON.stringify(updatedUsers));
 
     // Save to Supabase
-    saveProfileToSupabase(newStudent).catch(err => console.warn('Supabase profile save error:', err));
-
-    return newStudent;
+    try {
+      const res = await saveProfileToSupabase(newStudent);
+      if (!res.success) {
+        console.warn('[QuizRev] Supabase profile save notice:', res.error);
+        return { success: false, error: res.error, user: newStudent };
+      }
+      return { success: true, user: newStudent };
+    } catch (err: any) {
+      console.warn('[QuizRev] Exception saving profile to Supabase:', err);
+      return { success: false, error: err.message || 'Failed to save profile', user: newStudent };
+    }
   };
 
-  const registerStudent = (data: { fullName: string; email: string; studentId?: string; password?: string }) => {
-    const newStudent = createStudentAccount({
+  const registerStudent = async (data: { fullName: string; email: string; studentId?: string; password?: string }): Promise<{ success: boolean; error?: string; user?: UserProfile }> => {
+    const res = await createStudentAccount({
       fullName: data.fullName,
       email: data.email,
       studentId: data.studentId || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
       password: data.password || 'student123',
     });
-    // Directly set user and redirect to dashboard
-    setCurrentUser(newStudent);
-    setCurrentView('home');
-    return newStudent;
+
+    if (res.user) {
+      // Directly set user and redirect to dashboard
+      setCurrentUser(res.user);
+      setCurrentView('home');
+    }
+
+    return res;
   };
 
   const addSubject = (name: string, code: string, description: string, color = '#1b6e66') => {
@@ -574,8 +612,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsExamInProgress(false);
     setCurrentView('quiz-result');
 
-    // Save to Supabase
-    saveAttemptToSupabase(attempt).catch(err => console.warn('Supabase save attempt error:', err));
+    // Save to Supabase (passing currentUser for self-healing profile foreign key)
+    saveAttemptToSupabase(attempt, currentUser).then(res => {
+      if (res.success) {
+        console.info(`[QuizRev] Attempt ${attempt.id} successfully synced to Supabase.`);
+      } else {
+        console.warn('[QuizRev] Attempt Supabase sync notice:', res.error);
+      }
+    }).catch(err => console.warn('[QuizRev] Supabase save attempt error:', err));
 
     return attempt;
   };

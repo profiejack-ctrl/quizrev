@@ -451,77 +451,143 @@ export async function saveSubjectToSupabase(subject: Subject): Promise<boolean> 
 /**
  * Saves a user profile to Supabase
  */
-export async function saveProfileToSupabase(profile: UserProfile): Promise<boolean> {
+export async function saveProfileToSupabase(
+  profile: UserProfile
+): Promise<{ success: boolean; error?: string }> {
   const supabase = getSupabaseClient();
-  if (!supabase) return false;
+  if (!supabase) {
+    return { success: false, error: 'Supabase client is not connected.' };
+  }
 
   try {
-    const { error } = await supabase.from('profiles').upsert({
-      id: profile.id,
-      email: profile.email,
-      full_name: profile.fullName,
+    const cleanEmail = profile.email.toLowerCase().trim();
+    const profileId = ensureUuid(profile.id);
+
+    // Prepare payload with password
+    const payloadWithPassword: any = {
+      id: profileId,
+      email: cleanEmail,
+      full_name: profile.fullName.trim(),
       student_id: profile.studentId || null,
       role: profile.role,
       avatar_url: profile.avatarUrl || null,
+      password: profile.password || 'student123',
       created_at: profile.createdAt || new Date().toISOString(),
-    });
+    };
 
-    if (error) {
-      console.error('Error saving profile to Supabase:', error);
-      return false;
+    // Attempt upsert with password
+    const { error: errWithPassword } = await supabase
+      .from('profiles')
+      .upsert(payloadWithPassword, { onConflict: 'id' });
+
+    if (!errWithPassword) {
+      console.info(`[QuizRev] Saved profile for ${cleanEmail} to Supabase successfully.`);
+      return { success: true };
     }
-    return true;
-  } catch (err) {
-    console.error('saveProfileToSupabase exception:', err);
-    return false;
+
+    // If password column does not exist on Supabase, retry without password field
+    if (
+      errWithPassword.message.toLowerCase().includes('password') ||
+      errWithPassword.code === '42703'
+    ) {
+      const payloadWithoutPassword = { ...payloadWithPassword };
+      delete payloadWithoutPassword.password;
+
+      const { error: errWithoutPassword } = await supabase
+        .from('profiles')
+        .upsert(payloadWithoutPassword, { onConflict: 'id' });
+
+      if (errWithoutPassword) {
+        console.error('[QuizRev] Error saving profile to Supabase without password:', errWithoutPassword);
+        return { success: false, error: errWithoutPassword.message };
+      }
+      return { success: true };
+    }
+
+    console.error('[QuizRev] Error saving profile to Supabase:', errWithPassword);
+    return { success: false, error: errWithPassword.message };
+  } catch (err: any) {
+    console.error('[QuizRev] saveProfileToSupabase exception:', err);
+    return { success: false, error: err.message || 'Unknown save error' };
   }
 }
 
 /**
  * Saves a quiz attempt and its individual student answers to Supabase
  */
-export async function saveAttemptToSupabase(attempt: QuizAttempt): Promise<boolean> {
+export async function saveAttemptToSupabase(
+  attempt: QuizAttempt,
+  studentProfile?: UserProfile
+): Promise<{ success: boolean; error?: string }> {
   const supabase = getSupabaseClient();
-  if (!supabase) return false;
+  if (!supabase) {
+    return { success: false, error: 'Supabase client is not connected.' };
+  }
 
   try {
-    const attemptId = attempt.id;
+    const attemptId = ensureUuid(attempt.id);
+    const quizId = ensureUuid(attempt.quizId);
+    const studentId = ensureUuid(attempt.studentId);
 
-    // 1. Insert Attempt
-    const { error: attError } = await supabase.from('quiz_attempts').insert({
+    // 0. Auto-ensure student profile exists in Supabase so foreign key quiz_attempts_student_id_fkey is satisfied!
+    try {
+      const cleanEmail = studentProfile?.email?.toLowerCase().trim() || `student_${studentId.substring(0, 8)}@quizrev.edu`;
+      await supabase.from('profiles').upsert({
+        id: studentId,
+        email: cleanEmail,
+        full_name: studentProfile?.fullName?.trim() || attempt.studentName || 'Student',
+        student_id: studentProfile?.studentId || null,
+        role: 'student',
+        created_at: attempt.startedAt || new Date().toISOString(),
+      }, { onConflict: 'id' });
+    } catch (e) {
+      console.warn('[QuizRev] Pre-saving profile for attempt notice:', e);
+    }
+
+    // 1. Upsert Attempt
+    const { error: attError } = await supabase.from('quiz_attempts').upsert({
       id: attemptId,
-      quiz_id: attempt.quizId,
-      student_id: attempt.studentId,
+      quiz_id: quizId,
+      student_id: studentId,
       started_at: attempt.startedAt || new Date().toISOString(),
       completed_at: attempt.completedAt || new Date().toISOString(),
-      time_spent_seconds: attempt.timeSpentSeconds,
-      total_questions: attempt.totalQuestions,
-      correct_answers: attempt.correctAnswers,
-      score: attempt.score,
-      percentage: attempt.percentage,
-      passed: attempt.passed,
+      time_spent_seconds: Number(attempt.timeSpentSeconds) || 60,
+      total_questions: Number(attempt.totalQuestions) || 0,
+      correct_answers: Number(attempt.correctAnswers) || 0,
+      score: Number(attempt.score) || 0,
+      percentage: Number(attempt.percentage) || 0,
+      passed: Boolean(attempt.passed),
     });
 
     if (attError) {
-      console.error('Error saving attempt to Supabase:', attError);
-      return false;
+      console.error('[QuizRev] Error saving attempt to Supabase:', attError);
+      return { success: false, error: attError.message };
     }
 
-    // 2. Insert Student Answers
-    const answerEntries = Object.entries(attempt.answers);
+    // 2. Upsert Student Answers
+    const answerEntries = Object.entries(attempt.answers || {});
     for (const [qId, choiceId] of answerEntries) {
-      await supabase.from('student_answers').insert({
-        id: generateUuid(),
-        attempt_id: attemptId,
-        question_id: qId,
-        selected_choice_id: choiceId,
-      });
+      if (!qId) continue;
+      const sanitizedQId = ensureUuid(qId);
+      const sanitizedChoiceId = choiceId ? ensureUuid(choiceId) : null;
+
+      try {
+        await supabase.from('student_answers').upsert({
+          id: generateUuid(),
+          attempt_id: attemptId,
+          question_id: sanitizedQId,
+          selected_choice_id: sanitizedChoiceId,
+        });
+      } catch (ansErr) {
+        console.warn('[QuizRev] Error saving student answer:', ansErr);
+      }
     }
 
-    return true;
-  } catch (err) {
-    console.error('saveAttemptToSupabase exception:', err);
-    return false;
+    console.info(`[QuizRev] Successfully synced attempt ${attemptId} for quiz ${quizId} to Supabase!`);
+    return { success: true };
+  } catch (err: any) {
+    console.error('[QuizRev] saveAttemptToSupabase exception:', err);
+    return { success: false, error: err.message || 'Unknown save error' };
   }
 }
 
@@ -545,33 +611,37 @@ export async function pushAllLocalDataToSupabase(data: {
     let syncedAttempts = 0;
     let syncedProfiles = 0;
 
-    // 1. Sync subjects
+    // 1. Sync profiles first (dependency for attempts)
+    for (const p of data.profiles) {
+      const res = await saveProfileToSupabase(p);
+      if (res.success) syncedProfiles++;
+    }
+
+    // 2. Sync subjects second (dependency for quizzes)
     for (const s of data.subjects) {
       const ok = await saveSubjectToSupabase(s);
       if (ok) syncedSubjects++;
     }
 
-    // 2. Sync profiles
-    for (const p of data.profiles) {
-      const ok = await saveProfileToSupabase(p);
-      if (ok) syncedProfiles++;
-    }
-
-    // 3. Sync quizzes
+    // 3. Sync quizzes third (dependency for questions & attempts)
     for (const q of data.quizzes) {
       const res = await saveQuizToSupabase(q);
       if (res.success) syncedQuizzes++;
     }
 
-    // 4. Sync attempts
+    // 4. Sync attempts fourth
+    const profileMap = new Map<string, UserProfile>();
+    data.profiles.forEach(p => profileMap.set(p.id, p));
+
     for (const a of data.attempts) {
-      const ok = await saveAttemptToSupabase(a);
-      if (ok) syncedAttempts++;
+      const targetProfile = profileMap.get(a.studentId);
+      const res = await saveAttemptToSupabase(a, targetProfile);
+      if (res.success) syncedAttempts++;
     }
 
     return {
       success: true,
-      message: `Successfully synchronized: ${syncedSubjects} subjects, ${syncedProfiles} accounts, ${syncedQuizzes} exams, and ${syncedAttempts} attempts to Supabase!`,
+      message: `Successfully synchronized: ${syncedProfiles} accounts, ${syncedSubjects} subjects, ${syncedQuizzes} exams, and ${syncedAttempts} attempts to Supabase!`,
     };
   } catch (err: any) {
     return { success: false, message: err.message || 'Sync failed.' };

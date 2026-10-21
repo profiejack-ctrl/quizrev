@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { QuizAttempt } from '../../types/quiz';
 import { 
@@ -8,12 +8,17 @@ import {
   Clock, 
   ChevronRight, 
   BookOpen, 
-  Calendar 
+  Calendar,
+  RefreshCw 
 } from 'lucide-react';
 
 export const StudentHistory: React.FC = () => {
-  const { currentUser, attempts, subjects, viewAttemptDetails, setCurrentView } = useApp();
+  const { currentUser, attempts, subjects, viewAttemptDetails, setCurrentView, refreshFromSupabase, isSyncingWithSupabase } = useApp();
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshFromSupabase();
+  }, []);
 
   if (!currentUser) return null;
 
@@ -34,9 +39,19 @@ export const StudentHistory: React.FC = () => {
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-serif text-2xl font-bold text-ink">
-            Mock Exam History
-          </h2>
+          <div className="flex items-center space-x-2">
+            <h2 className="font-serif text-2xl font-bold text-ink">
+              Mock Exam History
+            </h2>
+            <button
+              onClick={() => refreshFromSupabase()}
+              disabled={isSyncingWithSupabase}
+              title="Refresh attempt history from database"
+              className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-surface border border-transparent hover:border-border transition-all"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
+            </button>
+          </div>
           <p className="text-xs text-ink-muted">
             All your past exam sessions, scores, and review breakdowns.
           </p>

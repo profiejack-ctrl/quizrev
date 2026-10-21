@@ -9,7 +9,8 @@ import {
   ShieldCheck, 
   AlertCircle, 
   Check, 
-  ArrowRight 
+  ArrowRight,
+  Loader2 
 } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
@@ -17,6 +18,7 @@ export const LoginScreen: React.FC = () => {
 
   const [activeRole, setActiveRole] = useState<'student' | 'teacher'>('student');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [identifier, setIdentifier] = useState('');
@@ -26,7 +28,7 @@ export const LoginScreen: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -36,15 +38,21 @@ export const LoginScreen: React.FC = () => {
         setErrorMsg('Please enter your full name and email.');
         return;
       }
+      setIsSubmitting(true);
       try {
-        const student = registerStudent({
+        const res = await registerStudent({
           fullName: fullName.trim(),
           email: identifier.trim(),
           studentId: studentId.trim(),
           password: password.trim() || 'student123',
         });
-        login(student.email, password.trim() || 'student123');
+        setIsSubmitting(false);
+
+        if (!res.success && res.error) {
+          setErrorMsg(res.error);
+        }
       } catch (err: any) {
+        setIsSubmitting(false);
         setErrorMsg(err.message || 'Registration failed.');
       }
       return;
@@ -200,10 +208,20 @@ export const LoginScreen: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 active:scale-98"
+              disabled={isSubmitting}
+              className="w-full py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 active:scale-98 disabled:opacity-60"
             >
-              <span>{isRegistering ? 'Complete Registration' : 'Sign In to QuizRev'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>{isRegistering ? 'Creating Account & Syncing...' : 'Signing In...'}</span>
+                </>
+              ) : (
+                <>
+                  <span>{isRegistering ? 'Complete Registration' : 'Sign In to QuizRev'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
             </button>
           </form>
 

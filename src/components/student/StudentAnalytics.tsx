@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { calculateStudentAnalytics } from '../../lib/analytics';
 import { 
@@ -9,11 +9,16 @@ import {
   BookOpen, 
   Award, 
   Clock, 
-  BarChart2 
+  BarChart2,
+  RefreshCw 
 } from 'lucide-react';
 
 export const StudentAnalytics: React.FC = () => {
-  const { currentUser, attempts, subjects, setCurrentView } = useApp();
+  const { currentUser, attempts, subjects, setCurrentView, refreshFromSupabase, isSyncingWithSupabase } = useApp();
+
+  useEffect(() => {
+    refreshFromSupabase();
+  }, []);
 
   if (!currentUser) return null;
 
