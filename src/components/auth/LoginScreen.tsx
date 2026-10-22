@@ -70,34 +70,34 @@ export const LoginScreen: React.FC = () => {
         
         {/* Monogram Brand Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center font-serif text-2xl font-bold shadow-sm mx-auto">
+          <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-teal-400 to-teal-600 text-white flex items-center justify-center font-serif text-3xl font-bold shadow-[6px_6px_16px_rgba(13,148,136,0.35),-4px_-4px_12px_rgba(255,255,255,0.9),inset_2px_2px_3px_rgba(255,255,255,0.6),inset_-2px_-2px_3px_rgba(0,0,0,0.15)] mx-auto transform hover:scale-105 transition-transform">
             Q
           </div>
           <div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-normal text-ink tracking-tight">
+            <h1 className="font-serif text-3xl sm:text-4xl font-normal text-ink tracking-tight">
               QuizRev
             </h1>
-            <p className="text-xs text-ink-muted">
-              Mobile-First Mock Exam & Revision Platform
+            <p className="text-xs text-ink-muted font-medium">
+              Tactile Mock Exam Revision Platform
             </p>
           </div>
         </div>
 
         {/* Card Body */}
-        <div className="bg-surface border border-border rounded-2xl p-6 sm:p-7 shadow-sm space-y-5">
+        <div className="clay-surface p-6 sm:p-8 shadow-clay-lg space-y-5">
           
           {/* Role Tabs */}
           {!isRegistering && (
-            <div className="grid grid-cols-2 p-1 bg-ground rounded-xl border border-border">
+            <div className="grid grid-cols-2 p-1.5 clay-inset rounded-2xl gap-1.5">
               <button
                 type="button"
                 onClick={() => {
                   setActiveRole('student');
                   setErrorMsg(null);
                 }}
-                className={`py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                className={`py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
                   activeRole === 'student'
-                    ? 'bg-surface text-ink font-semibold shadow-xs'
+                    ? 'clay-surface-sm text-accent shadow-clay-sm'
                     : 'text-ink-muted hover:text-ink'
                 }`}
               >
@@ -111,9 +111,9 @@ export const LoginScreen: React.FC = () => {
                   setActiveRole('teacher');
                   setErrorMsg(null);
                 }}
-                className={`py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                className={`py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
                   activeRole === 'teacher'
-                    ? 'bg-surface text-ink font-semibold shadow-xs'
+                    ? 'clay-surface-sm text-amber-700 shadow-clay-sm'
                     : 'text-ink-muted hover:text-ink'
                 }`}
               >
@@ -127,7 +127,7 @@ export const LoginScreen: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegistering && (
               <div>
-                <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
+                <label className="block text-xs font-bold text-ink mb-1.5 flex items-center space-x-1">
                   <User className="w-3.5 h-3.5 text-ink-muted" />
                   <span>Full Name *</span>
                 </label>
@@ -137,13 +137,13 @@ export const LoginScreen: React.FC = () => {
                   placeholder="e.g. Maria Santos"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-ground"
+                  className="w-full px-4 py-2.5 rounded-xl clay-inset text-xs text-ink placeholder:text-ink-subtle/70 focus:outline-none focus:ring-2 focus:ring-accent/40 font-medium transition-all"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
+              <label className="block text-xs font-bold text-ink mb-1.5 flex items-center space-x-1">
                 <Mail className="w-3.5 h-3.5 text-ink-muted" />
                 <span>
                   {activeRole === 'student' ? 'Email or Student ID *' : 'Teacher Email Address *'}
@@ -159,13 +159,13 @@ export const LoginScreen: React.FC = () => {
                 }
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-ground"
+                className="w-full px-4 py-2.5 rounded-xl clay-inset text-xs text-ink placeholder:text-ink-subtle/70 focus:outline-none focus:ring-2 focus:ring-accent/40 font-medium transition-all"
               />
             </div>
 
             {isRegistering && (
               <div>
-                <label className="block text-xs font-medium text-ink mb-1.5">
+                <label className="block text-xs font-bold text-ink mb-1.5">
                   Student ID (Optional)
                 </label>
                 <input
@@ -173,13 +173,13 @@ export const LoginScreen: React.FC = () => {
                   placeholder="e.g. STU-2026-0105"
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-ground"
+                  className="w-full px-4 py-2.5 rounded-xl clay-inset text-xs text-ink placeholder:text-ink-subtle/70 focus:outline-none focus:ring-2 focus:ring-accent/40 font-medium transition-all"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
+              <label className="block text-xs font-bold text-ink mb-1.5 flex items-center space-x-1">
                 <Key className="w-3.5 h-3.5 text-ink-muted" />
                 <span>Password</span>
               </label>
@@ -188,19 +188,19 @@ export const LoginScreen: React.FC = () => {
                 placeholder={isRegistering ? 'Choose a password' : '••••••••'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-ground font-mono"
+                className="w-full px-4 py-2.5 rounded-xl clay-inset text-xs text-ink placeholder:text-ink-subtle/70 focus:outline-none focus:ring-2 focus:ring-accent/40 font-mono transition-all"
               />
             </div>
 
             {errorMsg && (
-              <div className="p-3 bg-negative-bg/50 border border-negative/30 rounded-xl text-negative-ink text-xs flex items-center space-x-2">
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-negative text-xs font-semibold flex items-center space-x-2 shadow-sm">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {successMsg && (
-              <div className="p-3 bg-positive-bg/50 border border-positive/30 rounded-xl text-positive-ink text-xs flex items-center space-x-2">
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-positive text-xs font-semibold flex items-center space-x-2 shadow-sm">
                 <Check className="w-4 h-4 flex-shrink-0 text-positive" />
                 <span>{successMsg}</span>
               </div>
@@ -209,17 +209,17 @@ export const LoginScreen: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors shadow-sm flex items-center justify-center space-x-1.5 active:scale-98 disabled:opacity-60"
+              className="w-full py-3 rounded-2xl clay-btn clay-btn-teal text-xs font-bold transition-all shadow-clay-btn flex items-center justify-center space-x-2 disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>{isRegistering ? 'Creating Account & Syncing...' : 'Signing In...'}</span>
                 </>
               ) : (
                 <>
                   <span>{isRegistering ? 'Complete Registration' : 'Sign In to QuizRev'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
@@ -228,7 +228,7 @@ export const LoginScreen: React.FC = () => {
           {/* Registration toggle */}
           <div className="border-t border-rule pt-4 text-center">
             {isRegistering ? (
-              <p className="text-xs text-ink-muted">
+              <p className="text-xs text-ink-muted font-medium">
                 Already have an account?{' '}
                 <button
                   type="button"
@@ -236,13 +236,13 @@ export const LoginScreen: React.FC = () => {
                     setIsRegistering(false);
                     setErrorMsg(null);
                   }}
-                  className="text-accent font-semibold hover:underline"
+                  className="text-accent font-bold hover:underline"
                 >
                   Sign in here
                 </button>
               </p>
             ) : (
-              <p className="text-xs text-ink-muted">
+              <p className="text-xs text-ink-muted font-medium">
                 Student without an account?{' '}
                 <button
                   type="button"
@@ -250,7 +250,7 @@ export const LoginScreen: React.FC = () => {
                     setIsRegistering(true);
                     setErrorMsg(null);
                   }}
-                  className="text-accent font-semibold hover:underline"
+                  className="text-accent font-bold hover:underline"
                 >
                   Register student profile
                 </button>

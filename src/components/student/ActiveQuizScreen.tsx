@@ -72,24 +72,24 @@ export const ActiveQuizScreen: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-ground flex flex-col overflow-hidden">
-      {/* 1. Header Bar */}
-      <header className="h-14 sm:h-16 border-b border-border px-4 sm:px-6 flex items-center justify-between bg-surface/80 backdrop-blur-md">
+      {/* 1. Clay Header Bar */}
+      <header className="h-16 px-4 sm:px-6 flex items-center justify-between bg-surface/90 backdrop-blur-md border-b border-white/80 shadow-clay-sm z-10">
         
         {/* Left: Exit button & Exam title */}
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setIsCancelModalOpen(true)}
-            className="p-1.5 rounded-full hover:bg-ground border border-border text-ink-muted hover:text-ink transition-colors"
+            className="clay-btn-neutral p-2 rounded-xl text-ink-muted hover:text-ink transition-transform active:scale-95"
             title="Exit Exam"
           >
             <X className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="font-serif text-sm sm:text-base font-semibold text-ink line-clamp-1">
+            <h1 className="font-sans text-sm sm:text-base font-bold text-ink line-clamp-1">
               {activeQuiz.title}
             </h1>
             <p className="text-[11px] text-ink-muted flex items-center space-x-1.5">
-              <span>{activeQuiz.subjectName || 'Mock Exam'}</span>
+              <span className="font-medium text-accent">{activeQuiz.subjectName || 'Mock Exam'}</span>
               <span>•</span>
               <span className="tabular-nums">
                 {answeredCount} of {totalQuestions} answered
@@ -104,21 +104,21 @@ export const ActiveQuizScreen: React.FC = () => {
           {/* Question Grid Drawer Toggle */}
           <button
             onClick={() => setIsQuestionDrawerOpen(!isQuestionDrawerOpen)}
-            className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-control text-xs font-medium border border-border bg-ground hover:bg-surface text-ink transition-all"
+            className="clay-btn-neutral px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5"
             title="Overview all questions"
           >
-            <Grid className="w-3.5 h-3.5 text-ink-muted" />
+            <Grid className="w-3.5 h-3.5 text-accent" />
             <span className="hidden xs:inline">Questions</span>
           </button>
 
-          {/* Countdown Timer */}
+          {/* Countdown Timer (Pillowy 3D Badge) */}
           <div
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-control border text-xs font-semibold tabular-nums tracking-wider transition-colors ${
+            className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold tabular-nums tracking-wider shadow-clay-sm ${
               isCriticalTime
-                ? 'bg-negative-bg border-negative text-negative animate-pulse'
+                ? 'bg-rose-50 border border-rose-300 text-rose-600 animate-pulse'
                 : isLowTime
-                ? 'bg-warning-bg border-warning text-warning'
-                : 'bg-ground border-border text-ink'
+                ? 'bg-amber-50 border border-amber-300 text-amber-700'
+                : 'clay-surface-pill text-accent border border-white/80'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
@@ -128,44 +128,47 @@ export const ActiveQuizScreen: React.FC = () => {
           {/* Submit Action */}
           <button
             onClick={() => setIsSubmitModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm active:scale-95"
+            className="clay-btn-teal px-4 py-1.5 rounded-xl text-xs font-bold active:scale-95 transition-transform"
           >
             Submit
           </button>
         </div>
       </header>
 
-      {/* 2. Top Progress Bar */}
-      <div className="w-full bg-border h-1">
-        <div
-          className="bg-accent h-1 transition-all duration-300"
-          style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
-        />
+      {/* 2. Top Progress Bar Inset Trough */}
+      <div className="px-4 sm:px-6 pt-3 pb-1">
+        <div className="clay-inset-sm h-2.5 rounded-full overflow-hidden bg-[#e2e8f0]/70 p-0.5">
+          <div
+            className="bg-gradient-to-r from-teal-400 to-teal-600 h-full rounded-full transition-all duration-300 shadow-sm"
+            style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
+          />
+        </div>
       </div>
 
-      {/* 3. Horizontal Question Quick-Tracker (Thumb-friendly mobile scroll) */}
-      <div className="bg-ground border-b border-rule px-4 py-2 overflow-x-auto no-scrollbar">
-        <div className="flex items-center space-x-1.5 min-w-max">
+      {/* 3. Horizontal Question Quick-Tracker (Tactile Clay Thumb Scroll) */}
+      <div className="px-4 py-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center space-x-2 min-w-max py-1">
           {sessionQuestions.map((q, idx) => {
             const isAnswered = Boolean(selectedAnswers[q.id]);
             const isFlagged = flaggedQuestionIds.includes(q.id);
             const isCurrent = idx === currentQuestionIndex;
 
+            let buttonClass = 'clay-surface-sm text-slate-500 hover:text-slate-900 border border-white/80';
+            if (isCurrent) {
+              buttonClass = 'clay-btn-teal scale-105 font-bold shadow-clay-sm';
+            } else if (isAnswered) {
+              buttonClass = 'clay-inset-sm bg-teal-50/70 text-accent font-bold border border-teal-200/50';
+            }
+
             return (
               <button
                 key={q.id}
                 onClick={() => setCurrentQuestionIndex(idx)}
-                className={`relative w-8 h-8 rounded-lg text-xs font-medium flex items-center justify-center transition-all ${
-                  isCurrent
-                    ? 'ring-2 ring-accent ring-offset-1 bg-accent text-white font-semibold'
-                    : isAnswered
-                    ? 'bg-accent-light text-accent border border-accent-border font-medium'
-                    : 'bg-surface text-ink-muted border border-border hover:border-control'
-                }`}
+                className={`relative w-8 h-8 rounded-xl text-xs flex items-center justify-center transition-all ${buttonClass}`}
               >
                 <span>{idx + 1}</span>
                 {isFlagged && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-warning border border-white" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border border-white shadow-xs" />
                 )}
               </button>
             );
@@ -174,36 +177,40 @@ export const ActiveQuizScreen: React.FC = () => {
       </div>
 
       {/* 4. Main Question & Choices Stage */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 max-w-3xl mx-auto w-full flex flex-col justify-between">
-        <div className="space-y-6">
+      <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 max-w-3xl mx-auto w-full flex flex-col justify-between">
+        <div className="space-y-5">
           
           {/* Question Meta & Flag Button */}
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-ink-muted">
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-muted">
               Question {currentQuestionIndex + 1} of {totalQuestions}
             </span>
 
             <button
               onClick={() => toggleFlag(currentQuestion.id)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-control text-xs font-medium border transition-all ${
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 isCurrentFlagged
-                  ? 'bg-warning-bg border-warning/60 text-warning-ink font-semibold'
-                  : 'bg-surface border-border text-ink-muted hover:text-ink hover:bg-ground'
+                  ? 'clay-inset-sm bg-amber-50 text-amber-700 border border-amber-300/60 shadow-clay-inset'
+                  : 'clay-btn-neutral text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Flag className={`w-3.5 h-3.5 ${isCurrentFlagged ? 'fill-warning text-warning' : ''}`} />
-              <span>{isCurrentFlagged ? 'Flagged' : 'Flag for review'}</span>
+              <Flag className={`w-3.5 h-3.5 ${isCurrentFlagged ? 'fill-amber-500 text-amber-500' : ''}`} />
+              <span>{isCurrentFlagged ? 'Flagged for review' : 'Flag for review'}</span>
             </button>
           </div>
 
-          {/* Question Text */}
-          <div className="bg-surface border border-border rounded-2xl p-5 sm:p-7">
-            <h2 className="text-base sm:text-lg text-ink font-medium leading-relaxed">
+          {/* Question Text (Pillowy Clay Card) */}
+          <div className="clay-surface p-6 sm:p-7 rounded-3xl space-y-2">
+            <div className="flex items-center space-x-2 text-xs font-bold text-accent">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span>Question {currentQuestionIndex + 1}</span>
+            </div>
+            <h2 className="text-base sm:text-lg text-ink font-semibold leading-relaxed tracking-tight">
               {currentQuestion.questionText}
             </h2>
           </div>
 
-          {/* Choices List */}
+          {/* Choices List with Tactile Press Inset */}
           <div className="space-y-3">
             {currentQuestion.choices.map((choice) => {
               const isSelected = currentSelectedChoiceId === choice.id;
@@ -212,22 +219,22 @@ export const ActiveQuizScreen: React.FC = () => {
                 <button
                   key={choice.id}
                   onClick={() => selectAnswer(currentQuestion.id, choice.id)}
-                  className={`w-full text-left p-4 sm:p-5 rounded-xl border transition-all flex items-start space-x-3.5 min-h-[56px] active:scale-[0.99] ${
+                  className={`w-full text-left p-4 sm:p-5 rounded-2xl flex items-start space-x-3.5 min-h-[58px] transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? 'border-accent bg-accent-light/50 ring-1 ring-accent text-ink shadow-sm'
-                      : 'border-border bg-ground hover:border-control hover:bg-surface text-ink'
+                      ? 'clay-inset ring-2 ring-accent bg-teal-50/60 text-slate-900 shadow-clay-inset'
+                      : 'clay-surface-sm text-slate-700 hover:text-slate-900 hover:scale-[1.008] active:scale-[0.99]'
                   }`}
                 >
                   <span
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold flex-shrink-0 transition-colors ${
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${
                       isSelected
-                        ? 'bg-accent text-white'
-                        : 'bg-surface border border-border text-ink-muted'
+                        ? 'bg-accent text-white shadow-clay-sm'
+                        : 'clay-inset-sm text-slate-500 bg-[#eef2f7]'
                     }`}
                   >
                     {choice.label}
                   </span>
-                  <span className="text-sm sm:text-base leading-relaxed pt-0.5">
+                  <span className="text-sm sm:text-base leading-relaxed pt-0.5 font-medium">
                     {choice.text}
                   </span>
                 </button>
@@ -237,29 +244,29 @@ export const ActiveQuizScreen: React.FC = () => {
         </div>
 
         {/* 5. Bottom Navigation Bar */}
-        <div className="mt-8 pt-4 border-t border-border flex items-center justify-between safe-pb">
+        <div className="mt-6 pt-4 border-t border-white/60 flex items-center justify-between safe-pb">
           <button
             onClick={handlePrev}
             disabled={currentQuestionIndex === 0}
-            className={`px-4 py-2.5 rounded-control border border-border text-xs font-medium flex items-center space-x-1.5 transition-colors ${
+            className={`clay-btn-neutral px-4 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 ${
               currentQuestionIndex === 0
                 ? 'opacity-40 cursor-not-allowed text-ink-muted'
-                : 'bg-ground hover:bg-surface text-ink'
+                : 'text-ink'
             }`}
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Previous</span>
           </button>
 
-          <div className="text-xs text-ink-muted">
-            <span className="font-semibold text-ink tabular-nums">{currentQuestionIndex + 1}</span>
+          <div className="clay-surface-pill px-4 py-1.5 text-xs font-bold text-slate-700 shadow-clay-sm">
+            <span className="text-accent tabular-nums">{currentQuestionIndex + 1}</span>
             <span> / </span>
             <span className="tabular-nums">{totalQuestions}</span>
           </div>
 
           <button
             onClick={handleNext}
-            className="px-5 py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium flex items-center space-x-1.5 transition-all shadow-sm active:scale-95"
+            className="clay-btn-teal px-5 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-1.5"
           >
             <span>{currentQuestionIndex === totalQuestions - 1 ? 'Review & Submit' : 'Next'}</span>
             <ChevronRight className="w-4 h-4" />
@@ -270,15 +277,15 @@ export const ActiveQuizScreen: React.FC = () => {
       {/* Question Drawer / Modal */}
       {isQuestionDrawerOpen && (
         <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex justify-end">
-          <div className="bg-ground w-full max-w-xs h-full p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200">
+          <div className="clay-surface w-full max-w-xs h-full p-5 flex flex-col justify-between shadow-clay-lg animate-in slide-in-from-right duration-200 rounded-none sm:rounded-l-3xl border-l border-white/80">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-border">
-                <h3 className="font-serif text-base font-semibold text-ink">
+              <div className="flex items-center justify-between pb-4 border-b border-white/60">
+                <h3 className="font-sans text-base font-bold text-ink">
                   Question Overview
                 </h3>
                 <button
                   onClick={() => setIsQuestionDrawerOpen(false)}
-                  className="p-1 rounded-full text-ink-muted hover:text-ink"
+                  className="clay-btn-neutral p-1.5 rounded-xl text-ink-muted hover:text-ink"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -287,25 +294,32 @@ export const ActiveQuizScreen: React.FC = () => {
               {/* Legend */}
               <div className="grid grid-cols-2 gap-2 my-4 text-[11px] text-ink-muted">
                 <div className="flex items-center space-x-1.5">
-                  <span className="w-3 h-3 rounded bg-accent-light border border-accent-border" />
+                  <span className="w-3 h-3 rounded bg-teal-500/20 border border-teal-500" />
                   <span>Answered ({answeredCount})</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <span className="w-3 h-3 rounded bg-surface border border-border" />
-                  <span>Unanswered ({unansweredCount})</span>
+                  <span className="w-3 h-3 rounded bg-[#f4f7fb] border border-white/80 shadow-clay-sm" />
+                  <span>Pending ({unansweredCount})</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <span className="w-3 h-3 rounded bg-warning border border-white" />
+                  <span className="w-3 h-3 rounded bg-rose-500 border border-white" />
                   <span>Flagged ({flaggedCount})</span>
                 </div>
               </div>
 
               {/* Grid */}
-              <div className="grid grid-cols-5 gap-2 max-h-[60vh] overflow-y-auto pt-2">
+              <div className="grid grid-cols-5 gap-2 max-h-[60vh] overflow-y-auto pt-2 p-1">
                 {sessionQuestions.map((q, idx) => {
                   const isAnswered = Boolean(selectedAnswers[q.id]);
                   const isFlagged = flaggedQuestionIds.includes(q.id);
                   const isCurrent = idx === currentQuestionIndex;
+
+                  let gridClass = 'clay-surface-sm text-slate-500';
+                  if (isCurrent) {
+                    gridClass = 'clay-btn-teal font-bold shadow-clay-sm';
+                  } else if (isAnswered) {
+                    gridClass = 'clay-inset-sm bg-teal-50/70 text-accent font-bold border border-teal-200/50';
+                  }
 
                   return (
                     <button
@@ -314,17 +328,11 @@ export const ActiveQuizScreen: React.FC = () => {
                         setCurrentQuestionIndex(idx);
                         setIsQuestionDrawerOpen(false);
                       }}
-                      className={`relative h-10 rounded-xl text-xs font-medium flex items-center justify-center transition-all ${
-                        isCurrent
-                          ? 'ring-2 ring-accent bg-accent text-white font-bold'
-                          : isAnswered
-                          ? 'bg-accent-light text-accent border border-accent-border'
-                          : 'bg-surface text-ink-muted border border-border'
-                      }`}
+                      className={`relative h-10 rounded-xl text-xs font-semibold flex items-center justify-center transition-all ${gridClass}`}
                     >
                       <span>{idx + 1}</span>
                       {isFlagged && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-warning border border-white" />
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border border-white shadow-xs" />
                       )}
                     </button>
                   );
@@ -337,7 +345,7 @@ export const ActiveQuizScreen: React.FC = () => {
                 setIsQuestionDrawerOpen(false);
                 setIsSubmitModalOpen(true);
               }}
-              className="w-full py-2.5 rounded-control bg-accent text-white text-xs font-medium"
+              className="w-full py-2.5 rounded-xl clay-btn-teal text-white text-xs font-bold"
             >
               Submit Exam Now
             </button>
@@ -348,33 +356,33 @@ export const ActiveQuizScreen: React.FC = () => {
       {/* Review & Submit Modal */}
       {isSubmitModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-ground border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5">
+          <div className="clay-surface rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-clay-lg space-y-5">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-accent-light text-accent flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-2xl bg-teal-500/15 text-accent flex items-center justify-center shadow-clay-sm">
+                <CheckCircle2 className="w-6 h-6 text-accent" />
               </div>
               <div>
-                <h3 className="font-serif text-lg font-semibold text-ink">
+                <h3 className="font-sans text-lg font-bold text-ink">
                   Submit Mock Exam?
                 </h3>
                 <p className="text-xs text-ink-muted">
-                  Review your completion before final submission.
+                  Review your completion before final score submission.
                 </p>
               </div>
             </div>
 
-            <div className="bg-surface rounded-xl p-4 border border-border space-y-2.5 text-xs">
+            <div className="clay-inset rounded-2xl p-4 space-y-2.5 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-ink-muted">Questions Answered:</span>
-                <span className="font-semibold text-ink tabular-nums">
+                <span className="font-bold text-ink tabular-nums">
                   {answeredCount} of {totalQuestions}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-ink-muted">Unanswered Questions:</span>
                 <span
-                  className={`font-semibold tabular-nums ${
-                    unansweredCount > 0 ? 'text-negative' : 'text-positive'
+                  className={`font-bold tabular-nums ${
+                    unansweredCount > 0 ? 'text-rose-600' : 'text-emerald-600'
                   }`}
                 >
                   {unansweredCount}
@@ -382,20 +390,20 @@ export const ActiveQuizScreen: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-ink-muted">Flagged for Review:</span>
-                <span className="font-semibold text-warning tabular-nums">
+                <span className="font-bold text-amber-600 tabular-nums">
                   {flaggedCount}
                 </span>
               </div>
-              <div className="flex items-center justify-between border-t border-rule pt-2">
+              <div className="flex items-center justify-between border-t border-slate-300/60 pt-2">
                 <span className="text-ink-muted">Remaining Time:</span>
-                <span className="font-semibold text-ink tabular-nums">
+                <span className="font-bold text-ink tabular-nums">
                   {formatTime(remainingSeconds)}
                 </span>
               </div>
             </div>
 
             {unansweredCount > 0 && (
-              <div className="flex items-start space-x-2 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs">
+              <div className="flex items-start space-x-2.5 p-3.5 bg-amber-50/90 rounded-2xl border border-amber-200 text-amber-900 text-xs shadow-clay-sm">
                 <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <p>
                   You still have <strong className="tabular-nums">{unansweredCount}</strong> unanswered questions. Unanswered items will receive 0 points.
@@ -406,13 +414,13 @@ export const ActiveQuizScreen: React.FC = () => {
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 onClick={() => setIsSubmitModalOpen(false)}
-                className="px-4 py-2 rounded-control border border-border text-xs font-medium text-ink hover:bg-surface transition-colors"
+                className="clay-btn-neutral px-4 py-2 rounded-xl text-xs font-semibold text-ink"
               >
                 Return to Exam
               </button>
               <button
                 onClick={handleFinalSubmit}
-                className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors shadow-sm"
+                className="clay-btn-teal px-5 py-2 rounded-xl text-xs font-bold text-white"
               >
                 Confirm & Submit
               </button>
@@ -424,13 +432,13 @@ export const ActiveQuizScreen: React.FC = () => {
       {/* Cancel Exam Modal */}
       {isCancelModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-ground border border-border rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+          <div className="clay-surface rounded-3xl w-full max-w-sm p-6 shadow-clay-lg space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-xl bg-negative-bg text-negative flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 flex items-center justify-center shadow-clay-sm">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-serif text-base font-semibold text-ink">
+                <h3 className="font-sans text-base font-bold text-ink">
                   Leave Exam?
                 </h3>
                 <p className="text-xs text-ink-muted">
@@ -443,16 +451,16 @@ export const ActiveQuizScreen: React.FC = () => {
               Are you sure you want to quit this mock exam session? You can retake it anytime.
             </p>
 
-            <div className="flex items-center justify-end space-x-2 pt-2">
+            <div className="flex items-center justify-end space-x-2.5 pt-2">
               <button
                 onClick={() => setIsCancelModalOpen(false)}
-                className="px-3.5 py-1.5 rounded-control border border-border text-xs font-medium text-ink hover:bg-surface"
+                className="clay-btn-neutral px-4 py-2 rounded-xl text-xs font-semibold text-ink"
               >
                 Continue Exam
               </button>
               <button
                 onClick={cancelExam}
-                className="px-4 py-1.5 rounded-control bg-negative text-white text-xs font-medium hover:bg-negative/90"
+                className="clay-btn-coral px-4 py-2 rounded-xl text-white text-xs font-bold"
               >
                 Exit Exam
               </button>

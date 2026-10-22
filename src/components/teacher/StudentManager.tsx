@@ -8,9 +8,9 @@ import {
   CheckCircle2, 
   X, 
   ExternalLink, 
-  Check,
-  RefreshCw,
-  Loader2,
+  Check, 
+  RefreshCw, 
+  Loader2, 
   AlertCircle 
 } from 'lucide-react';
 
@@ -77,49 +77,49 @@ export const StudentManager: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <h2 className="font-serif text-2xl font-bold text-ink">
+          <div className="flex items-center space-x-2.5">
+            <h2 className="font-sans text-2xl font-bold text-ink">
               Student Account Directory
             </h2>
             <button
               onClick={() => refreshFromSupabase()}
               disabled={isSyncingWithSupabase}
               title="Refresh students from cloud database"
-              className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-surface border border-transparent hover:border-border transition-all"
+              className="clay-btn-neutral p-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all"
             >
               <RefreshCw className={`w-4 h-4 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
             </button>
           </div>
-          <p className="text-xs text-ink-muted">
+          <p className="text-xs text-ink-muted mt-0.5">
             Manage enrolled students, create accounts, and monitor individual revision activity.
           </p>
         </div>
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="px-4 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm flex items-center space-x-1.5 self-start sm:self-auto"
+          className="clay-btn-teal px-4 py-2.5 rounded-xl text-white text-xs font-bold transition-all flex items-center space-x-1.5 self-start sm:self-auto"
         >
           <UserPlus className="w-4 h-4" />
           <span>Create Student Account</span>
         </button>
       </div>
 
-      {/* Search Input */}
+      {/* Inset Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" />
+        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           placeholder="Search by student name, ID, or email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface"
+          className="clay-inset w-full pl-11 pr-4 py-3 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent transition-all font-medium"
         />
       </div>
 
       {/* Students List */}
-      <div className="space-y-3">
+      <div className="space-y-3.5">
         {filteredStudents.length === 0 ? (
-          <div className="bg-surface border border-border rounded-2xl p-8 text-center text-xs text-ink-muted">
+          <div className="clay-surface p-10 text-center rounded-3xl text-xs text-slate-500 font-medium">
             No students found matching "{searchTerm}".
           </div>
         ) : (
@@ -136,46 +136,48 @@ export const StudentManager: React.FC = () => {
             return (
               <div
                 key={student.id}
-                className="bg-ground border border-border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/40 transition-all"
+                className="clay-surface p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:scale-[1.008] transition-all"
               >
                 <div className="flex items-center space-x-3.5">
-                  <img
-                    src={student.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=ST'}
-                    alt={student.fullName}
-                    className="w-10 h-10 rounded-full object-cover border border-border bg-surface"
-                  />
+                  <div className="w-11 h-11 rounded-full p-0.5 clay-inset flex items-center justify-center flex-shrink-0">
+                    <img
+                      src={student.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=ST'}
+                      alt={student.fullName}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  </div>
                   <div>
-                    <h4 className="font-serif text-base font-semibold text-ink leading-tight">
+                    <h4 className="font-sans text-base font-bold text-ink leading-tight">
                       {student.fullName}
                     </h4>
-                    <p className="text-xs text-ink-muted">
-                      {student.studentId || 'No ID'} • {student.email}
+                    <p className="text-xs text-ink-muted font-medium mt-0.5">
+                      <span className="text-accent font-semibold">{student.studentId || 'No ID'}</span> • {student.email}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end space-x-6 border-t sm:border-t-0 pt-3 sm:pt-0 border-rule">
+                <div className="flex items-center justify-between sm:justify-end space-x-6 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/60">
                   <div className="text-left sm:text-right">
-                    <p className="text-[11px] text-ink-muted">Mock Exams Taken</p>
-                    <p className="text-xs font-semibold text-ink tabular-nums mt-0.5">
+                    <p className="text-[11px] font-medium text-slate-400">Mock Exams Taken</p>
+                    <p className="text-xs font-bold text-slate-800 tabular-nums mt-0.5">
                       {totalAttempts} {totalAttempts === 1 ? 'exam' : 'exams'}
                     </p>
                   </div>
 
                   <div className="text-left sm:text-right">
-                    <p className="text-[11px] text-ink-muted">Average Score</p>
-                    <p className="text-xs font-semibold text-ink tabular-nums mt-0.5">
+                    <p className="text-[11px] font-medium text-slate-400">Average Score</p>
+                    <p className="text-xs font-bold text-slate-800 tabular-nums mt-0.5">
                       {avgScore !== null ? `${avgScore}%` : '—'}
                     </p>
                   </div>
 
                   <button
                     onClick={() => switchUser(student.id)}
-                    className="px-3 py-1.5 rounded-control border border-border text-[11px] font-medium text-ink hover:bg-surface transition-colors flex items-center space-x-1"
+                    className="clay-btn-neutral px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-700 flex items-center space-x-1"
                     title="Simulate student session"
                   >
                     <span>View As</span>
-                    <ExternalLink className="w-3 h-3 text-ink-muted" />
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
                   </button>
                 </div>
               </div>
@@ -187,19 +189,19 @@ export const StudentManager: React.FC = () => {
       {/* Create Student Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-ground border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-rule pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+          <div className="clay-surface rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-clay-lg space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-teal-500/15 flex items-center justify-center text-accent shadow-clay-sm">
                   <UserPlus className="w-4 h-4" />
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-ink">
+                <h3 className="font-sans text-lg font-bold text-ink">
                   Create Student Account
                 </h3>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="p-1 rounded-full text-ink-muted hover:text-ink"
+                className="clay-btn-neutral p-1.5 rounded-xl text-ink-muted hover:text-ink"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -207,7 +209,7 @@ export const StudentManager: React.FC = () => {
 
             <form onSubmit={handleCreateStudent} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-ink mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Full Name *
                 </label>
                 <input
@@ -216,12 +218,12 @@ export const StudentManager: React.FC = () => {
                   placeholder="e.g. Gabriel Mendoza"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface"
+                  className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-ink mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Student Email Address *
                 </label>
                 <input
@@ -230,12 +232,12 @@ export const StudentManager: React.FC = () => {
                   placeholder="e.g. gabriel.mendoza@student.quizrev.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface"
+                  className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-ink mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Student ID Number
                 </label>
                 <input
@@ -243,41 +245,41 @@ export const StudentManager: React.FC = () => {
                   placeholder="e.g. STU-2026-0245"
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface"
+                  className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-ink mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Default Temporary Password
                 </label>
                 <input
                   type="text"
                   value={tempPassword}
                   onChange={(e) => setTempPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface font-mono"
+                  className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent font-mono"
                 />
               </div>
 
               {createError && (
-                <div className="p-3 bg-negative-bg/50 border border-negative/30 rounded-xl text-negative-ink text-xs flex items-center space-x-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-rose-800 text-xs flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
                   <span>{createError}</span>
                 </div>
               )}
 
-              <div className="pt-2 flex items-center justify-end space-x-2">
+              <div className="pt-2 flex items-center justify-end space-x-2.5">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-control border border-border text-xs font-medium text-ink hover:bg-surface"
+                  className="clay-btn-neutral px-4 py-2 rounded-xl text-xs font-semibold text-slate-700"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm flex items-center space-x-1 disabled:opacity-60"
+                  className="clay-btn-teal px-5 py-2 rounded-xl text-white text-xs font-bold flex items-center space-x-1.5 disabled:opacity-60"
                 >
                   {isCreating ? (
                     <>

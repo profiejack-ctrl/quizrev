@@ -19,112 +19,112 @@ export const MobileNav: React.FC = () => {
   const isTeacher = currentUser.role === 'teacher';
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-ground/95 backdrop-blur-md border-t border-border safe-pb shadow-lg">
-      <nav className="flex items-center justify-around px-2 py-2">
+    <div className="md:hidden fixed bottom-3 left-3 right-3 z-40 max-w-lg mx-auto clay-surface p-1.5 shadow-clay-lg safe-pb">
+      <nav className="flex items-center justify-around">
         {isTeacher ? (
           <>
             <button
               onClick={() => setCurrentView('home')}
-              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
                 currentView === 'home'
-                  ? 'text-accent font-semibold'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'clay-inset-sm text-accent font-bold'
+                  : 'text-ink-muted hover:text-ink active:scale-95'
               }`}
             >
-              <LayoutDashboard className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Overview</span>
+              <LayoutDashboard className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Overview</span>
             </button>
 
             <button
               onClick={() => setCurrentView('upload')}
-              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
                 currentView === 'upload'
-                  ? 'text-accent font-semibold'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'clay-inset-sm text-accent font-bold'
+                  : 'text-ink-muted hover:text-ink active:scale-95'
               }`}
             >
-              <UploadCloud className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Upload</span>
+              <UploadCloud className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Upload</span>
             </button>
 
             <button
               onClick={() => setCurrentView('attempts')}
-              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
                 currentView === 'attempts'
-                  ? 'text-accent font-semibold'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'clay-inset-sm text-accent font-bold'
+                  : 'text-ink-muted hover:text-ink active:scale-95'
               }`}
             >
-              <ClipboardList className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Scores</span>
+              <ClipboardList className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Scores</span>
             </button>
 
             <button
               onClick={() => setCurrentView('students')}
-              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
                 currentView === 'students'
-                  ? 'text-accent font-semibold'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'clay-inset-sm text-accent font-bold'
+                  : 'text-ink-muted hover:text-ink active:scale-95'
               }`}
             >
-              <Users className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Students</span>
+              <Users className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Students</span>
             </button>
 
             <button
               onClick={logout}
-              className="flex flex-col items-center py-1 px-3 rounded-xl text-negative/80 hover:text-negative transition-all"
+              className="flex flex-col items-center py-1.5 px-3 rounded-2xl text-negative/80 hover:text-negative active:scale-95 transition-all"
               title="Sign Out"
             >
-              <LogOut className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Logout</span>
+              <LogOut className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Logout</span>
             </button>
           </>
         ) : (
           <>
             <button
               onClick={() => setCurrentView('home')}
-              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
                 currentView === 'home'
-                  ? 'text-accent font-semibold'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'clay-inset-sm text-accent font-bold'
+                  : 'text-ink-muted hover:text-ink active:scale-95'
               }`}
             >
-              <BookOpen className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Exams</span>
+              <BookOpen className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Exams</span>
             </button>
 
             <button
               onClick={() => setCurrentView('history')}
-              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
                 currentView === 'history'
-                  ? 'text-accent font-semibold'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'clay-inset-sm text-accent font-bold'
+                  : 'text-ink-muted hover:text-ink active:scale-95'
               }`}
             >
-              <History className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">History</span>
+              <History className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">History</span>
             </button>
 
             <button
               onClick={() => setCurrentView('analytics')}
-              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center py-1.5 px-3 rounded-2xl transition-all ${
                 currentView === 'analytics'
-                  ? 'text-accent font-semibold'
-                  : 'text-ink-muted hover:text-ink'
+                  ? 'clay-inset-sm text-accent font-bold'
+                  : 'text-ink-muted hover:text-ink active:scale-95'
               }`}
             >
-              <BarChart2 className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Analytics</span>
+              <BarChart2 className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Analytics</span>
             </button>
 
             <button
               onClick={logout}
-              className="flex flex-col items-center py-1 px-3 rounded-xl text-negative/80 hover:text-negative transition-all"
+              className="flex flex-col items-center py-1.5 px-3 rounded-2xl text-negative/80 hover:text-negative active:scale-95 transition-all"
               title="Sign Out"
             >
-              <LogOut className="w-5 h-5 mb-0.5" />
-              <span className="text-[11px]">Logout</span>
+              <LogOut className="w-4 h-4 mb-0.5" />
+              <span className="text-[10px]">Logout</span>
             </button>
           </>
         )}

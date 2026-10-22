@@ -128,13 +128,12 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
 
     if (!currentQuiz || currentQuiz.questions.length === 0) {
       setErrorMsg('Selected exam has no questions to map.');
-      return;
-    }
-
-    if (!rawText.trim()) {
+    } else if (!rawText.trim()) {
       setErrorMsg('Please upload an answer key file or paste text first.');
       return;
     }
+
+    if (!currentQuiz || currentQuiz.questions.length === 0 || !rawText.trim()) return;
 
     setIsAiMapping(true);
     setErrorMsg(null);
@@ -182,16 +181,16 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-ground border border-border rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="clay-surface rounded-3xl w-full max-w-lg shadow-clay-lg flex flex-col max-h-[90vh] overflow-hidden">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border bg-surface flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-slate-200/60 bg-white/40 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-accent-light text-accent flex items-center justify-center">
-              <Key className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-teal-500/15 text-accent flex items-center justify-center shadow-clay-sm">
+              <Key className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-semibold text-ink leading-tight">
+              <h3 className="font-sans text-base font-bold text-ink leading-tight">
                 Upload Answer Key
               </h3>
               <p className="text-xs text-ink-muted">
@@ -201,9 +200,9 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-ink-muted hover:text-ink hover:bg-ground transition-colors"
+            className="clay-btn-neutral p-1.5 rounded-xl text-ink-muted hover:text-ink"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -212,18 +211,18 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
           
           {/* Target Quiz Selector */}
           <div>
-            <label className="block text-xs font-medium text-ink mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
               Target Mock Exam *
             </label>
             {quizzes.length === 0 ? (
-              <p className="text-xs text-ink-muted p-3 bg-surface rounded-xl border border-border">
+              <p className="text-xs text-slate-500 p-3 clay-inset rounded-xl">
                 No mock exams created yet. Please upload an exam first.
               </p>
             ) : (
               <select
                 value={selectedQuizId}
                 onChange={(e) => setSelectedQuizId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface"
+                className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-accent font-medium bg-[#eaf0f7]"
               >
                 {quizzes.map((quiz) => (
                   <option key={quiz.id} value={quiz.id}>
@@ -235,15 +234,15 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
           </div>
 
           {/* Input Mode Selector */}
-          <div className="flex items-center justify-between border-b border-rule pb-2">
+          <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
             <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => setInputMode('file')}
-                className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                   inputMode === 'file'
-                    ? 'bg-ink text-white'
-                    : 'bg-surface text-ink-muted border border-border'
+                    ? 'clay-inset-sm text-accent bg-teal-50 border border-teal-200/50 shadow-clay-inset'
+                    : 'clay-surface-sm text-slate-600 hover:text-slate-900'
                 }`}
               >
                 File (.docx / .pdf)
@@ -251,10 +250,10 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
               <button
                 type="button"
                 onClick={() => setInputMode('text')}
-                className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                   inputMode === 'text'
-                    ? 'bg-ink text-white'
-                    : 'bg-surface text-ink-muted border border-border'
+                    ? 'clay-inset-sm text-accent bg-teal-50 border border-teal-200/50 shadow-clay-inset'
+                    : 'clay-surface-sm text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Paste Text
@@ -264,21 +263,21 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
             <button
               type="button"
               onClick={handleLoadSample}
-              className="text-xs text-accent hover:underline flex items-center space-x-1"
+              className="text-xs font-bold text-accent hover:underline flex items-center space-x-1"
             >
-              <Sparkles className="w-3 h-3" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span>Sample Key</span>
             </button>
           </div>
 
           {inputMode === 'file' ? (
             <div>
-              <label className="border-2 border-dashed border-border hover:border-accent/60 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-surface hover:bg-accent-light/10 text-center">
+              <label className="clay-inset rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-teal-50/20 text-center border-dashed border-2 border-slate-300">
                 <UploadCloud className="w-8 h-8 text-accent mb-2" />
-                <p className="text-xs font-semibold text-ink">
+                <p className="text-xs font-bold text-slate-800">
                   {selectedFile ? selectedFile.name : 'Choose Answer Key file (.docx or .pdf)'}
                 </p>
-                <p className="text-[11px] text-ink-muted mt-0.5">
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                   Reads numbered keys like: 1. A, 2. B, 3. C...
                 </p>
                 <input
@@ -290,7 +289,7 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
               </label>
 
               {isParsing && (
-                <p className="text-xs text-accent mt-2 animate-pulse">
+                <p className="text-xs font-bold text-accent mt-2 animate-pulse text-center">
                   Extracting text from answer key file...
                 </p>
               )}
@@ -302,20 +301,20 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
                 placeholder="1. A - Explanation&#10;2. B&#10;3. C&#10;4. D"
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
-                className="w-full p-3 rounded-xl border border-border text-xs focus:outline-none focus:border-accent font-mono bg-surface"
+                className="clay-inset w-full p-3.5 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent font-mono"
               />
             </div>
           )}
 
           {/* AI Mapping & Parse Action Bar */}
-          <div className="p-3.5 rounded-xl bg-accent-light/30 border border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center space-x-2">
+          <div className="clay-surface-sm p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-clay-sm">
+            <div className="flex items-center space-x-2.5">
               <Sparkles className="w-4 h-4 text-accent flex-shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-ink">
+                <p className="text-xs font-bold text-slate-800">
                   AI Key Correlator ({geminiConfig.model})
                 </p>
-                <p className="text-[10px] text-ink-muted">
+                <p className="text-[10px] text-slate-500 font-medium">
                   Matches answers & explanations directly to questions.
                 </p>
               </div>
@@ -326,7 +325,7 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsGeminiModalOpen(true)}
-                  className="px-2.5 py-1.5 rounded-control border border-border bg-ground text-ink text-[11px] font-medium"
+                  className="clay-btn-neutral px-2.5 py-1.5 rounded-xl text-slate-700 text-[11px] font-bold"
                 >
                   <Settings className="w-3 h-3 inline mr-1 text-accent" />
                   Key
@@ -337,20 +336,20 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
                 type="button"
                 disabled={isAiMapping || !rawText.trim()}
                 onClick={handleAiMap}
-                className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all shadow-sm flex items-center space-x-1.5 ${
+                className={`clay-btn-teal px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 ${
                   !rawText.trim() || isAiMapping
-                    ? 'bg-control text-ink-muted cursor-not-allowed opacity-60'
-                    : 'bg-accent hover:bg-accent-hover text-white active:scale-95'
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
                 }`}
               >
                 {isAiMapping ? (
                   <>
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     <span>Mapping...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3" />
+                    <Sparkles className="w-3.5 h-3.5" />
                     <span>AI Auto-Map</span>
                   </>
                 )}
@@ -360,7 +359,7 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
                 type="button"
                 onClick={handleParseText}
                 disabled={!rawText.trim()}
-                className="px-2.5 py-1.5 rounded-control bg-ground border border-border text-ink text-[11px] font-medium hover:bg-surface"
+                className="clay-btn-neutral px-2.5 py-1.5 rounded-xl text-slate-700 text-[11px] font-bold"
               >
                 Regex Parse
               </button>
@@ -368,25 +367,25 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-negative-bg/50 border border-negative/30 rounded-xl text-negative-ink text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-rose-800 text-xs flex items-center space-x-2 font-medium shadow-clay-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 bg-positive-bg/50 border border-positive/30 rounded-xl text-positive-ink text-xs flex items-center space-x-2">
-              <Check className="w-4 h-4 flex-shrink-0 text-positive" />
+            <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-2xl text-emerald-800 text-xs flex items-center space-x-2 font-medium shadow-clay-sm">
+              <Check className="w-4 h-4 flex-shrink-0 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
           )}
 
           {/* Parsed Keys Preview List */}
           {parsedKeys.size > 0 && currentQuiz && (
-            <div className="space-y-2 border-t border-rule pt-3">
-              <div className="flex items-center justify-between text-xs font-semibold text-ink">
+            <div className="space-y-2.5 border-t border-slate-200/60 pt-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                 <span>Detected Keys Mapping ({parsedKeys.size} items)</span>
-                <span className="text-[11px] text-ink-muted">
+                <span className="text-[11px] text-slate-500 font-medium">
                   Exam has {currentQuiz.questions.length} questions
                 </span>
               </div>
@@ -399,23 +398,23 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
                   return (
                     <div
                       key={q.id}
-                      className={`p-2.5 rounded-lg border text-xs flex items-center justify-between ${
+                      className={`clay-surface-sm p-2.5 rounded-xl text-xs flex items-center justify-between ${
                         keyData
-                          ? 'bg-positive-bg/30 border-positive/40 text-ink'
-                          : 'bg-surface border-border text-ink-muted'
+                          ? 'border-emerald-300/60 bg-emerald-50/30'
+                          : 'text-slate-500'
                       }`}
                     >
-                      <span className="truncate max-w-[280px]">
-                        <strong>{qNum}.</strong> {q.questionText}
+                      <span className="truncate max-w-[280px] font-medium text-slate-800">
+                        <strong className="text-accent">{qNum}.</strong> {q.questionText}
                       </span>
                       {keyData ? (
                         <div className="flex items-center space-x-1.5 flex-shrink-0">
-                          <span className="text-[11px] font-bold text-positive bg-white px-2 py-0.5 rounded border border-positive/40">
+                          <span className="clay-surface-pill px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 shadow-xs">
                             Key: {keyData.answer}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[10px] text-ink-muted">No key provided</span>
+                        <span className="text-[10px] text-slate-400 font-medium">No key provided</span>
                       )}
                     </div>
                   );
@@ -426,11 +425,11 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border bg-surface flex items-center justify-between">
+        <div className="p-4 border-t border-slate-200/60 bg-white/40 flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-control border border-border text-xs font-medium text-ink hover:bg-ground"
+            className="clay-btn-neutral px-4 py-2 rounded-xl text-xs font-semibold text-slate-700"
           >
             Cancel
           </button>
@@ -438,10 +437,10 @@ export const AnswerKeyUploaderModal: React.FC<AnswerKeyUploaderModalProps> = ({
             type="button"
             disabled={parsedKeys.size === 0 || !selectedQuizId}
             onClick={handleApplyKeys}
-            className={`px-5 py-2 rounded-control text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5 ${
+            className={`clay-btn-teal px-5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 ${
               parsedKeys.size > 0 && selectedQuizId
-                ? 'bg-accent hover:bg-accent-hover text-white'
-                : 'bg-control text-ink-muted cursor-not-allowed'
+                ? ''
+                : 'opacity-50 cursor-not-allowed'
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />

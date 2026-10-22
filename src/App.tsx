@@ -137,13 +137,13 @@ export const App: React.FC = () => {
           <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-8 pb-24 md:pb-12">
             
             {/* Editorial Greeting Header */}
-            <div className="space-y-1 text-left sm:text-center max-w-2xl mx-auto pt-2">
-              <h1 className="font-serif text-2xl sm:text-3xl font-normal text-ink tracking-tight">
+            <div className="space-y-1.5 text-left sm:text-center max-w-2xl mx-auto pt-2">
+              <h1 className="font-sans text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
                 {isTeacher
                   ? `Welcome back, ${userFirstName}`
                   : `Good day, ${userFirstName}`}
               </h1>
-              <p className="text-xs sm:text-sm text-ink-muted">
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
                 {isTeacher
                   ? `${quizzes.length} mock exams active • ${attempts.length} total student submissions`
                   : `${quizzes.length} mock exams available for practice and revision.`}
@@ -154,48 +154,48 @@ export const App: React.FC = () => {
             {isTeacher ? (
               /* Teacher Overview */
               <div className="space-y-8">
-                {/* 4 Regular-Weight Tonal KPI Tiles */}
+                {/* 4 Tactile Clay KPI Tiles */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-surface border border-border rounded-2xl p-5">
-                    <span className="text-xs text-ink-muted">Total Mock Exams</span>
-                    <p className="font-serif text-3xl sm:text-4xl font-normal text-ink tabular-nums mt-1.5">
+                  <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Mock Exams</span>
+                    <p className="font-sans text-3xl sm:text-4xl font-black text-slate-800 tabular-nums mt-1.5">
                       {quizzes.length}
                     </p>
-                    <p className="text-[11px] text-ink-muted mt-1">Across {subjects.length} subjects</p>
+                    <p className="text-[11px] font-medium text-slate-500 mt-1">Across {subjects.length} subjects</p>
                   </div>
 
-                  <div className="bg-surface border border-border rounded-2xl p-5">
-                    <span className="text-xs text-ink-muted">Student Submissions</span>
-                    <p className="font-serif text-3xl sm:text-4xl font-normal text-ink tabular-nums mt-1.5">
+                  <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Student Submissions</span>
+                    <p className="font-sans text-3xl sm:text-4xl font-black text-slate-800 tabular-nums mt-1.5">
                       {attempts.length}
                     </p>
-                    <p className="text-[11px] text-ink-muted mt-1">Total completed tests</p>
+                    <p className="text-[11px] font-medium text-slate-500 mt-1">Total completed tests</p>
                   </div>
 
-                  <div className="bg-surface border border-border rounded-2xl p-5">
-                    <span className="text-xs text-ink-muted">Average Pass Rate</span>
-                    <p className="font-serif text-3xl sm:text-4xl font-normal text-positive tabular-nums mt-1.5">
+                  <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Average Pass Rate</span>
+                    <p className="font-sans text-3xl sm:text-4xl font-black text-emerald-700 tabular-nums mt-1.5">
                       {attempts.length > 0
                         ? `${Math.round((attempts.filter((a) => a.passed).length / attempts.length) * 100)}%`
                         : '0%'}
                     </p>
-                    <p className="text-[11px] text-ink-muted mt-1">Benchmark: 70%+</p>
+                    <p className="text-[11px] font-medium text-slate-500 mt-1">Benchmark: 70%+</p>
                   </div>
 
-                  <div className="bg-surface border border-border rounded-2xl p-5">
-                    <span className="text-xs text-ink-muted">Total Questions Bank</span>
-                    <p className="font-serif text-3xl sm:text-4xl font-normal text-ink tabular-nums mt-1.5">
+                  <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Questions Bank</span>
+                    <p className="font-sans text-3xl sm:text-4xl font-black text-slate-800 tabular-nums mt-1.5">
                       {quizzes.reduce((acc, q) => acc + q.questions.length, 0)}
                     </p>
-                    <p className="text-[11px] text-ink-muted mt-1">Shuffled items & keys</p>
+                    <p className="text-[11px] font-medium text-slate-500 mt-1">Shuffled items & keys</p>
                   </div>
                 </div>
 
-                {/* Quick Actions Row */}
+                {/* Quick Actions Row with Tactile Buttons */}
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => setCurrentView('upload')}
-                    className="px-4 py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors active:scale-95 flex items-center space-x-1.5 shadow-sm"
+                    className="clay-btn-teal px-4 py-2.5 rounded-xl text-xs font-bold transition-transform active:scale-95 flex items-center space-x-1.5"
                   >
                     <UploadCloud className="w-4 h-4" />
                     <span>Upload Exam (.docx / .pdf)</span>
@@ -203,7 +203,7 @@ export const App: React.FC = () => {
 
                   <button
                     onClick={() => handleOpenAnswerKeyUploader()}
-                    className="px-4 py-2.5 rounded-control bg-surface hover:bg-[#f0f0ee] border border-border text-ink text-xs font-medium transition-colors active:scale-95 flex items-center space-x-1.5"
+                    className="clay-btn-neutral px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 transition-transform active:scale-95 flex items-center space-x-1.5"
                   >
                     <Key className="w-4 h-4 text-accent" />
                     <span>Upload Answer Key</span>
@@ -211,16 +211,16 @@ export const App: React.FC = () => {
 
                   <button
                     onClick={() => setCurrentView('students')}
-                    className="px-4 py-2.5 rounded-control border border-border bg-ground hover:bg-surface text-ink text-xs font-medium transition-colors active:scale-95 flex items-center space-x-1.5"
+                    className="clay-btn-neutral px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 transition-transform active:scale-95 flex items-center space-x-1.5"
                   >
-                    <UserPlus className="w-4 h-4 text-ink-muted" />
+                    <UserPlus className="w-4 h-4 text-slate-500" />
                     <span>Create Student Account</span>
                   </button>
 
                   {/* Teacher-Only Supabase DB Configuration Button */}
                   <button
                     onClick={() => setIsSupabaseModalOpen(true)}
-                    className="px-3.5 py-2.5 rounded-control border border-border bg-surface hover:bg-[#f0f0ee] text-xs font-medium transition-colors active:scale-95 flex items-center space-x-2"
+                    className="clay-btn-neutral px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 transition-transform active:scale-95 flex items-center space-x-2"
                     title="Configure Supabase Database"
                   >
                     {isSyncingWithSupabase ? (
@@ -228,12 +228,12 @@ export const App: React.FC = () => {
                     ) : (
                       <Database className="w-3.5 h-3.5 text-accent" />
                     )}
-                    <span className="text-ink">
+                    <span>
                       {isSyncingWithSupabase ? 'Syncing...' : 'Supabase DB'}
                     </span>
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        supabaseConfig.isConfigured ? 'bg-positive' : 'bg-warning'
+                        supabaseConfig.isConfigured ? 'bg-emerald-500 shadow-xs' : 'bg-amber-500'
                       }`}
                       title={supabaseConfig.isConfigured ? 'Supabase Connected' : 'Local Storage Mode'}
                     />
@@ -242,95 +242,95 @@ export const App: React.FC = () => {
                   {/* Teacher-Only Gemini AI Configuration Button */}
                   <button
                     onClick={() => setIsGeminiModalOpen(true)}
-                    className="px-3.5 py-2.5 rounded-control border border-border bg-surface hover:bg-[#f0f0ee] text-xs font-medium transition-colors active:scale-95 flex items-center space-x-2"
+                    className="clay-btn-neutral px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 transition-transform active:scale-95 flex items-center space-x-2"
                     title="Configure Gemini AI Agent"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-ink">AI Agent ({geminiConfig.model})</span>
+                    <span>AI Agent ({geminiConfig.model})</span>
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        geminiConfig.isConfigured ? 'bg-positive' : 'bg-warning'
+                        geminiConfig.isConfigured ? 'bg-emerald-500 shadow-xs' : 'bg-amber-500'
                       }`}
                     />
                   </button>
                 </div>
 
-                {/* Published Mock Exams Table */}
-                <div className="bg-ground border border-border rounded-2xl p-6 space-y-4">
+                {/* Published Mock Exams Table (Pillowy Clay Card) */}
+                <div className="clay-surface p-6 sm:p-7 rounded-3xl space-y-4 shadow-clay">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-base font-semibold text-ink">
+                      <h3 className="font-sans text-base font-bold text-slate-800">
                         Published Mock Exams
                       </h3>
-                      <p className="text-xs text-ink-muted">
+                      <p className="text-xs text-slate-500">
                         Manage your active exams, attach answer keys, and configure durations.
                       </p>
                     </div>
-                    <span className="text-xs text-ink-muted tabular-nums">
+                    <span className="clay-surface-pill px-3 py-1 text-xs font-bold text-accent tabular-nums shadow-clay-sm">
                       {quizzes.length} exams
                     </span>
                   </div>
 
                   {quizzes.length === 0 ? (
-                    <div className="text-center py-12 px-4 border border-dashed border-border rounded-xl bg-surface/50 space-y-3">
-                      <div className="w-10 h-10 rounded-xl bg-accent-light text-accent flex items-center justify-center mx-auto">
-                        <UploadCloud className="w-5 h-5" />
+                    <div className="text-center py-12 px-4 clay-inset rounded-2xl space-y-3">
+                      <div className="w-12 h-12 rounded-2xl clay-surface flex items-center justify-center mx-auto text-accent shadow-clay-sm">
+                        <UploadCloud className="w-6 h-6" />
                       </div>
-                      <h4 className="text-sm font-semibold text-ink">
+                      <h4 className="text-sm font-bold text-slate-800">
                         No Mock Exams Published Yet
                       </h4>
-                      <p className="text-xs text-ink-muted max-w-sm mx-auto">
+                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
                         Upload your first exam questions and answer keys in DOCX or PDF format to let students start testing.
                       </p>
                       <button
                         onClick={() => setCurrentView('upload')}
-                        className="px-4 py-2 bg-accent text-white rounded-control text-xs font-medium hover:bg-accent-hover transition-colors inline-flex items-center space-x-1.5"
+                        className="clay-btn-teal px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center space-x-1.5"
                       >
                         <UploadCloud className="w-3.5 h-3.5" />
                         <span>Upload First Exam</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="divide-y divide-rule">
+                    <div className="space-y-3">
                       {quizzes.map((quiz) => {
                         const quizSubmissions = attempts.filter((a) => a.quizId === quiz.id);
 
                         return (
                           <div
                             key={quiz.id}
-                            className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-surface/50 px-2 rounded-xl transition-colors"
+                            className="clay-surface-sm p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:scale-[1.005] transition-all"
                           >
                             <div className="space-y-1">
                               <div className="flex items-center space-x-2">
                                 <span
-                                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                                  className="text-[11px] font-bold px-2.5 py-0.5 rounded-full clay-surface-pill shadow-xs"
                                   style={{
-                                    backgroundColor: `${quiz.subjectColor || '#1b6e66'}15`,
-                                    color: quiz.subjectColor || '#1b6e66',
+                                    backgroundColor: `${quiz.subjectColor || '#0d9488'}15`,
+                                    color: quiz.subjectColor || '#0d9488',
                                   }}
                                 >
                                   {quiz.subjectName}
                                 </span>
-                                <span className="text-[11px] text-ink-muted">
+                                <span className="text-[11px] text-slate-500 font-medium">
                                   {quiz.questions.length} questions • {quiz.durationMinutes} min limit
                                 </span>
                               </div>
-                              <h4 className="text-sm font-semibold text-ink">
+                              <h4 className="text-sm font-bold text-slate-800">
                                 {quiz.title}
                               </h4>
                             </div>
 
                             <div className="flex items-center space-x-2 sm:space-x-3">
                               <div className="text-right pr-2">
-                                <p className="text-[11px] text-ink-muted">Submissions</p>
-                                <p className="text-xs font-semibold text-ink tabular-nums">
+                                <p className="text-[11px] text-slate-400 font-medium">Submissions</p>
+                                <p className="text-xs font-bold text-slate-800 tabular-nums">
                                   {quizSubmissions.length}
                                 </p>
                               </div>
 
                               <button
                                 onClick={() => handleOpenAnswerKeyUploader(quiz.id)}
-                                className="px-2.5 py-1.5 rounded-control border border-border hover:bg-surface text-ink text-[11px] font-medium transition-colors flex items-center space-x-1"
+                                className="clay-btn-neutral px-3 py-1.5 rounded-xl text-slate-700 text-[11px] font-bold flex items-center space-x-1"
                                 title="Attach or update answer key"
                               >
                                 <Key className="w-3 h-3 text-accent" />
@@ -339,7 +339,7 @@ export const App: React.FC = () => {
 
                               <button
                                 onClick={() => startExam(quiz)}
-                                className="px-2.5 py-1.5 rounded-control border border-border hover:bg-surface text-ink text-[11px] font-medium transition-colors"
+                                className="clay-btn-neutral px-3 py-1.5 rounded-xl text-slate-700 text-[11px] font-bold"
                                 title="Preview taking exam"
                               >
                                 Preview
@@ -347,10 +347,10 @@ export const App: React.FC = () => {
 
                               <button
                                 onClick={() => deleteQuiz(quiz.id)}
-                                className="p-1.5 rounded-lg text-ink-muted hover:text-negative hover:bg-negative-bg/50 transition-colors"
+                                className="clay-btn-coral p-2 rounded-xl text-white hover:scale-105 transition-transform"
                                 title="Delete quiz"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
@@ -366,14 +366,14 @@ export const App: React.FC = () => {
                 {/* Student KPI Row */}
                 {studentAnalytics && (
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-surface border border-border rounded-2xl p-5">
-                      <span className="text-xs text-ink-muted">Improvement Rating</span>
+                    <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Improvement Rating</span>
                       <div className="flex items-baseline space-x-1.5 mt-1.5">
                         <span
-                          className={`font-serif text-3xl font-normal tabular-nums ${
+                          className={`font-sans text-3xl font-black tabular-nums ${
                             studentAnalytics.improvementRating > 0
-                              ? 'text-positive'
-                              : 'text-ink'
+                              ? 'text-emerald-700'
+                              : 'text-slate-800'
                           }`}
                         >
                           {studentAnalytics.improvementRating > 0
@@ -381,37 +381,37 @@ export const App: React.FC = () => {
                             : `${studentAnalytics.improvementRating}%`}
                         </span>
                         {studentAnalytics.improvementRating > 0 && (
-                          <TrendingUp className="w-4 h-4 text-positive" />
+                          <TrendingUp className="w-4 h-4 text-emerald-600" />
                         )}
                       </div>
-                      <p className="text-[11px] text-ink-muted mt-1">Growth progression</p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-1">Growth progression</p>
                     </div>
 
-                    <div className="bg-surface border border-border rounded-2xl p-5">
-                      <span className="text-xs text-ink-muted">Average Score</span>
-                      <p className="font-serif text-3xl font-normal text-ink tabular-nums mt-1.5">
+                    <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Average Score</span>
+                      <p className="font-sans text-3xl font-black text-slate-800 tabular-nums mt-1.5">
                         {studentAnalytics.averageScore}%
                       </p>
-                      <p className="text-[11px] text-ink-muted mt-1">Overall test accuracy</p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-1">Overall test accuracy</p>
                     </div>
 
-                    <div className="bg-surface border border-border rounded-2xl p-5">
-                      <span className="text-xs text-ink-muted">Exams Completed</span>
-                      <p className="font-serif text-3xl font-normal text-ink tabular-nums mt-1.5">
+                    <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Exams Completed</span>
+                      <p className="font-sans text-3xl font-black text-slate-800 tabular-nums mt-1.5">
                         {studentAnalytics.totalAttempts}
                       </p>
-                      <p className="text-[11px] text-ink-muted mt-1">
+                      <p className="text-[11px] font-medium text-slate-500 mt-1">
                         {studentAnalytics.overallPassRate}% pass rate
                       </p>
                     </div>
 
-                    <div className="bg-surface border border-border rounded-2xl p-5">
-                      <span className="text-xs text-ink-muted">Total Revision Time</span>
-                      <p className="font-serif text-3xl font-normal text-ink tabular-nums mt-1.5">
+                    <div className="clay-surface p-5 sm:p-6 rounded-3xl hover:scale-[1.01] transition-transform">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Revision Time</span>
+                      <p className="font-sans text-3xl font-black text-slate-800 tabular-nums mt-1.5">
                         {studentAnalytics.totalTimeSpentMinutes}
-                        <span className="text-sm font-sans font-normal text-ink-muted ml-1">m</span>
+                        <span className="text-base font-sans font-bold text-slate-500 ml-1">m</span>
                       </p>
-                      <p className="text-[11px] text-ink-muted mt-1">Dedicated study</p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-1">Dedicated study</p>
                     </div>
                   </div>
                 )}
@@ -420,14 +420,14 @@ export const App: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <h3 className="text-base font-semibold text-ink">
+                      <h3 className="font-sans text-base font-bold text-slate-800">
                         Select Subject
                       </h3>
                       <button
                         onClick={() => refreshFromSupabase()}
                         disabled={isSyncingWithSupabase}
                         title="Refresh exams from cloud database"
-                        className="p-1 rounded-lg text-ink-muted hover:text-ink hover:bg-surface border border-transparent hover:border-border transition-all"
+                        className="clay-btn-neutral p-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all"
                       >
                         <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
                       </button>
@@ -435,11 +435,11 @@ export const App: React.FC = () => {
 
                     <div className="flex items-center space-x-2">
                       {isSyncingWithSupabase && (
-                        <span className="text-[11px] text-accent flex items-center space-x-1 animate-pulse">
+                        <span className="text-[11px] font-bold text-accent flex items-center space-x-1 animate-pulse">
                           <span>Syncing...</span>
                         </span>
                       )}
-                      <span className="text-xs text-ink-muted">
+                      <span className="clay-surface-pill px-3 py-0.5 text-xs font-bold text-slate-600 shadow-clay-sm">
                         {filteredQuizzes.length} mock {filteredQuizzes.length === 1 ? 'exam' : 'exams'}
                       </span>
                     </div>
@@ -466,11 +466,13 @@ export const App: React.FC = () => {
                 </div>
 
                 {filteredQuizzes.length === 0 && (
-                  <div className="bg-surface border border-border rounded-2xl p-10 text-center space-y-3">
-                    <BookOpen className="w-8 h-8 text-ink-muted/50 mx-auto" />
+                  <div className="clay-surface p-10 rounded-3xl text-center space-y-4">
+                    <div className="w-12 h-12 rounded-2xl clay-inset flex items-center justify-center mx-auto text-slate-400">
+                      <BookOpen className="w-6 h-6 text-accent" />
+                    </div>
                     <div>
-                      <p className="text-sm font-medium text-ink">No mock exams found</p>
-                      <p className="text-xs text-ink-muted mt-1 max-w-sm mx-auto">
+                      <p className="text-sm font-bold text-slate-800">No mock exams found</p>
+                      <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
                         {selectedSubjectId 
                           ? 'No mock exams uploaded for this specific subject yet. Try selecting "All Subjects".'
                           : 'Your teacher has not published mock exams yet, or exams are syncing from the cloud.'}
@@ -480,7 +482,7 @@ export const App: React.FC = () => {
                       type="button"
                       onClick={() => refreshFromSupabase()}
                       disabled={isSyncingWithSupabase}
-                      className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-control bg-ground border border-border hover:border-control text-ink text-xs font-medium transition-all shadow-xs"
+                      className="clay-btn-neutral px-4 py-2.5 rounded-xl text-slate-700 text-xs font-bold inline-flex items-center space-x-1.5"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWithSupabase ? 'animate-spin text-accent' : ''}`} />
                       <span>Check for New Exams</span>

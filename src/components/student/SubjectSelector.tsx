@@ -17,21 +17,21 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
   const totalQuizzes = Object.values(quizCountsBySubject).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="w-full overflow-x-auto no-scrollbar py-1">
-      <div className="flex items-center space-x-2 min-w-max pb-1">
+    <div className="w-full overflow-x-auto no-scrollbar py-2">
+      <div className="flex items-center space-x-2.5 min-w-max pb-1 px-1">
         {/* All Subjects Pill */}
         <button
           onClick={() => onSelectSubject(null)}
-          className={`px-4 py-2 rounded-control text-xs font-medium transition-all flex items-center space-x-1.5 ${
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center space-x-2 active:scale-95 ${
             selectedSubjectId === null
-              ? 'bg-ink text-white shadow-sm'
-              : 'bg-surface text-ink-muted hover:text-ink hover:bg-[#efefed] border border-border'
+              ? 'clay-inset-sm text-accent ring-2 ring-accent/30 bg-teal-50/50'
+              : 'clay-surface-sm text-ink-muted hover:text-ink shadow-clay-sm'
           }`}
         >
           <span>All Subjects</span>
           <span
-            className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-              selectedSubjectId === null ? 'bg-white/20 text-white' : 'bg-ground text-ink-muted'
+            className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+              selectedSubjectId === null ? 'bg-accent text-white shadow-xs' : 'clay-inset-sm text-ink-muted'
             }`}
           >
             {totalQuizzes}
@@ -47,20 +47,20 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
             <button
               key={sub.id}
               onClick={() => onSelectSubject(sub.id)}
-              className={`px-4 py-2 rounded-control text-xs font-medium transition-all flex items-center space-x-2 ${
+              className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center space-x-2 active:scale-95 ${
                 isSelected
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'bg-surface text-ink hover:text-ink hover:bg-[#efefed] border border-border'
+                  ? 'clay-inset-sm text-accent ring-2 ring-accent/30 bg-teal-50/50'
+                  : 'clay-surface-sm text-ink hover:text-ink shadow-clay-sm'
               }`}
             >
               <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: isSelected ? '#ffffff' : sub.color }}
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-inner"
+                style={{ backgroundColor: sub.color || '#0d9488' }}
               />
               <span>{sub.name}</span>
               <span
-                className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-ground text-ink-muted'
+                className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                  isSelected ? 'bg-accent text-white shadow-xs' : 'clay-inset-sm text-ink-muted'
                 }`}
               >
                 {count}

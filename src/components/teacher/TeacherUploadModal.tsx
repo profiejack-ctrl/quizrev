@@ -443,7 +443,7 @@ NOTIFY pgrst, 'reload schema';`;
     <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-8 pb-24 md:pb-12">
       {/* Header */}
       <div>
-        <h2 className="font-serif text-2xl font-bold text-ink">
+        <h2 className="font-sans text-2xl font-bold text-ink">
           Upload Exam & Answer Key
         </h2>
         <p className="text-xs text-ink-muted mt-1">
@@ -452,27 +452,27 @@ NOTIFY pgrst, 'reload schema';`;
       </div>
 
       {/* Main Upload Box */}
-      <div className="bg-surface border border-border rounded-2xl p-6 space-y-6">
+      <div className="clay-surface p-6 sm:p-7 rounded-3xl space-y-6 shadow-clay">
         
         {/* Input Mode Selector */}
-        <div className="flex items-center justify-between border-b border-rule pb-4">
+        <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setInputMode('file')}
-              className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                 inputMode === 'file'
-                  ? 'bg-ink text-white'
-                  : 'bg-ground text-ink-muted border border-border'
+                  ? 'clay-inset-sm text-accent bg-teal-50 border border-teal-200/50 shadow-clay-inset'
+                  : 'clay-surface-sm text-slate-600 hover:text-slate-900'
               }`}
             >
               Upload DOCX / PDF File
             </button>
             <button
               onClick={() => setInputMode('text')}
-              className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                 inputMode === 'text'
-                  ? 'bg-ink text-white'
-                  : 'bg-ground text-ink-muted border border-border'
+                  ? 'clay-inset-sm text-accent bg-teal-50 border border-teal-200/50 shadow-clay-inset'
+                  : 'clay-surface-sm text-slate-600 hover:text-slate-900'
               }`}
             >
               Paste Text / Markdown
@@ -481,21 +481,21 @@ NOTIFY pgrst, 'reload schema';`;
 
           <button
             onClick={handleLoadSample}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-control bg-accent-light text-accent text-xs font-medium hover:bg-accent/15 transition-colors"
+            className="clay-btn-neutral flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-accent text-xs font-bold"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-accent" />
             <span>Load Sample Exam</span>
           </button>
         </div>
 
         {inputMode === 'file' ? (
           <div>
-            <label className="border-2 border-dashed border-border hover:border-accent/60 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all bg-ground hover:bg-accent-light/10 text-center">
+            <label className="clay-inset rounded-3xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-teal-50/20 text-center border-2 border-dashed border-slate-300">
               <UploadCloud className="w-10 h-10 text-accent mb-2" />
-              <p className="text-sm font-semibold text-ink">
+              <p className="text-sm font-bold text-slate-800">
                 {selectedFile ? selectedFile.name : 'Click or drag DOCX / PDF here'}
               </p>
-              <p className="text-xs text-ink-muted mt-1">
+              <p className="text-xs text-slate-500 font-medium mt-1">
                 Supports Microsoft Word (.docx), Adobe PDF (.pdf), and text files
               </p>
               <input
@@ -507,39 +507,41 @@ NOTIFY pgrst, 'reload schema';`;
             </label>
 
             {isParsing && (
-              <p className="text-xs text-accent mt-2 flex items-center space-x-1.5 animate-pulse">
+              <p className="text-xs font-bold text-accent mt-2 flex items-center space-x-1.5 animate-pulse justify-center">
                 <span>Reading document and extracting questions...</span>
               </p>
             )}
 
             {/* Separate Answer Key Uploader Dropzone */}
-            <div className="mt-4 pt-4 border-t border-rule">
+            <div className="mt-4 pt-4 border-t border-slate-200/60">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-ink flex items-center space-x-1.5">
+                <span className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
                   <Key className="w-3.5 h-3.5 text-accent" />
                   <span>Separate Answer Key File (Optional)</span>
                 </span>
                 {appliedKeyCount !== null && (
-                  <span className="text-[11px] text-positive font-semibold flex items-center space-x-1">
+                  <span className="text-[11px] text-emerald-700 font-bold flex items-center space-x-1">
                     <Check className="w-3.5 h-3.5" />
                     <span>Keys mapped to {appliedKeyCount} questions</span>
                   </span>
                 )}
               </div>
 
-              <label className="border border-dashed border-border hover:border-accent/60 rounded-xl p-4 flex items-center justify-between cursor-pointer transition-colors bg-surface hover:bg-accent-light/10">
+              <label className="clay-surface-sm p-4 rounded-2xl flex items-center justify-between cursor-pointer transition-colors hover:scale-[1.005]">
                 <div className="flex items-center space-x-3">
-                  <Key className="w-5 h-5 text-accent" />
+                  <div className="w-9 h-9 rounded-xl bg-teal-500/15 flex items-center justify-center text-accent shadow-clay-sm">
+                    <Key className="w-4 h-4 text-accent" />
+                  </div>
                   <div>
-                    <p className="text-xs font-medium text-ink">
+                    <p className="text-xs font-bold text-slate-800">
                       {keyFile ? keyFile.name : 'Upload separate Answer Key (.docx or .pdf)'}
                     </p>
-                    <p className="text-[11px] text-ink-muted">
+                    <p className="text-[11px] text-slate-500 font-medium">
                       Maps keys like: 1. A, 2. B, 3. C directly to the questions above
                     </p>
                   </div>
                 </div>
-                <span className="px-3 py-1 bg-ground border border-border rounded-lg text-xs font-medium text-ink">
+                <span className="clay-btn-neutral px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700">
                   {keyFile ? 'Change File' : 'Browse'}
                 </span>
                 <input
@@ -551,7 +553,7 @@ NOTIFY pgrst, 'reload schema';`;
               </label>
 
               {isKeyParsing && (
-                <p className="text-xs text-accent mt-1.5 animate-pulse">
+                <p className="text-xs font-bold text-accent mt-1.5 animate-pulse text-center">
                   Parsing answer keys...
                 </p>
               )}
@@ -560,7 +562,7 @@ NOTIFY pgrst, 'reload schema';`;
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-ink mb-1.5 flex items-center space-x-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center space-x-1.5">
                 <FileText className="w-3.5 h-3.5 text-accent" />
                 <span>Exam Questions Text (DOCX/PDF extracted or Markdown) *</span>
               </label>
@@ -569,12 +571,12 @@ NOTIFY pgrst, 'reload schema';`;
                 placeholder="Paste your exam text with questions, choices (A, B, C, D) here..."
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
-                className="w-full p-4 rounded-xl border border-border text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-ground font-mono"
+                className="clay-inset w-full p-4 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink mb-1.5 flex items-center space-x-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center space-x-1.5">
                 <Key className="w-3.5 h-3.5 text-accent" />
                 <span>Separate Answer Key Text (Optional)</span>
               </label>
@@ -583,28 +585,28 @@ NOTIFY pgrst, 'reload schema';`;
                 placeholder="Paste separate answer key here (e.g. 1. A, 2. B, 3. C with explanations)..."
                 value={rawKeyText}
                 onChange={(e) => setRawKeyText(e.target.value)}
-                className="w-full p-3 rounded-xl border border-border text-xs focus:outline-none focus:border-accent font-mono bg-ground"
+                className="clay-inset w-full p-3.5 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent font-mono"
               />
             </div>
           </div>
         )}
 
         {/* AI Agent Action Bar */}
-        <div className="p-4 rounded-xl bg-accent-light/30 border border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="space-y-0.5">
+        <div className="clay-surface-sm p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-clay-sm">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-accent" />
-              <span className="text-xs font-semibold text-ink">
+              <span className="text-xs font-bold text-slate-800">
                 Gemini AI Agent Analysis ({geminiConfig.model})
               </span>
               <span
                 className={`w-2 h-2 rounded-full ${
-                  geminiConfig.isConfigured ? 'bg-positive' : 'bg-warning'
+                  geminiConfig.isConfigured ? 'bg-emerald-500 shadow-xs' : 'bg-amber-500'
                 }`}
                 title={geminiConfig.isConfigured ? 'Gemini API configured' : 'API key needed'}
               />
             </div>
-            <p className="text-[11px] text-ink-muted">
+            <p className="text-[11px] text-slate-500 font-medium">
               Deep semantic parsing: identifies questions, separates choices (A-D), maps answer keys, and synthesizes rationales.
             </p>
           </div>
@@ -614,7 +616,7 @@ NOTIFY pgrst, 'reload schema';`;
               <button
                 type="button"
                 onClick={() => setIsGeminiModalOpen(true)}
-                className="px-3.5 py-2 rounded-control border border-border bg-ground hover:bg-surface text-ink text-xs font-medium transition-colors flex items-center space-x-1.5"
+                className="clay-btn-neutral px-3 py-1.5 rounded-xl text-slate-700 text-xs font-bold flex items-center space-x-1.5"
               >
                 <Settings className="w-3.5 h-3.5 text-accent" />
                 <span>Configure Key</span>
@@ -625,10 +627,10 @@ NOTIFY pgrst, 'reload schema';`;
               type="button"
               disabled={isAiAnalyzing || !rawText.trim()}
               onClick={handleAnalyzeWithGemini}
-              className={`px-4 py-2 rounded-control text-xs font-medium transition-all shadow-sm flex items-center space-x-1.5 ${
+              className={`clay-btn-teal px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 ${
                 !rawText.trim() || isAiAnalyzing
-                  ? 'bg-control text-ink-muted cursor-not-allowed opacity-60'
-                  : 'bg-accent hover:bg-accent-hover text-white active:scale-95'
+                  ? 'opacity-50 cursor-not-allowed'
+                  : ''
               }`}
             >
               {isAiAnalyzing ? (
@@ -648,7 +650,7 @@ NOTIFY pgrst, 'reload schema';`;
               type="button"
               onClick={handleParseRawText}
               disabled={!rawText.trim() || isAiAnalyzing}
-              className="px-3 py-2 rounded-control bg-ground border border-border text-ink-muted hover:text-ink text-xs font-medium transition-colors"
+              className="clay-btn-neutral px-3.5 py-2 rounded-xl text-slate-600 hover:text-slate-900 text-xs font-bold"
               title="Fast offline regex parser"
             >
               Quick Local Parse
@@ -657,15 +659,15 @@ NOTIFY pgrst, 'reload schema';`;
         </div>
 
         {aiSuccessMessage && (
-          <div className="p-3.5 bg-positive-bg/40 border border-positive/30 rounded-xl text-positive-ink text-xs flex items-center space-x-2 animate-in fade-in duration-200">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-positive" />
-            <span className="font-medium">{aiSuccessMessage}</span>
+          <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-2xl text-emerald-800 text-xs flex items-center space-x-2 font-medium shadow-clay-sm animate-in fade-in duration-200">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-600" />
+            <span className="font-bold">{aiSuccessMessage}</span>
           </div>
         )}
 
         {parseError && (
-          <div className="p-3.5 bg-negative-bg/50 border border-negative/30 rounded-xl text-negative-ink text-xs flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-rose-800 text-xs flex items-center space-x-2 font-medium shadow-clay-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
             <span>{parseError}</span>
           </div>
         )}
@@ -673,14 +675,14 @@ NOTIFY pgrst, 'reload schema';`;
 
       {/* Exam Configuration Form */}
       {hasParsed && (
-        <div className="bg-ground border border-border rounded-2xl p-6 space-y-6">
-          <h3 className="font-serif text-lg font-semibold text-ink border-b border-rule pb-3">
+        <div className="clay-surface p-6 sm:p-7 rounded-3xl space-y-6 shadow-clay">
+          <h3 className="font-sans text-lg font-bold text-ink border-b border-slate-200/60 pb-3">
             Exam Details & Subject
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-xs font-medium text-ink mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Exam Title
               </label>
               <input
@@ -688,17 +690,17 @@ NOTIFY pgrst, 'reload schema';`;
                 value={quizTitle}
                 onChange={(e) => setQuizTitle(e.target.value)}
                 placeholder="e.g. Midterm Mock Examination"
-                className="w-full px-3.5 py-2 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface"
+                className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent font-medium"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-ink mb-1 flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
                 <span>Subject Category</span>
                 <button
                   type="button"
                   onClick={() => setIsCreatingSubject(!isCreatingSubject)}
-                  className="text-accent text-[11px] hover:underline flex items-center space-x-1"
+                  className="text-accent text-[11px] font-bold hover:underline flex items-center space-x-1"
                 >
                   <Plus className="w-3 h-3" />
                   <span>{isCreatingSubject ? 'Cancel' : 'Add Subject'}</span>
@@ -712,19 +714,19 @@ NOTIFY pgrst, 'reload schema';`;
                     placeholder="Subject Name (e.g. Biology)"
                     value={newSubjectName}
                     onChange={(e) => setNewSubjectName(e.target.value)}
-                    className="flex-1 px-3 py-1.5 rounded-lg border border-border text-xs bg-surface"
+                    className="clay-inset flex-1 px-3 py-2 rounded-xl text-xs text-slate-800 focus:outline-none"
                   />
                   <input
                     type="text"
                     placeholder="Code (BIO)"
                     value={newSubjectCode}
                     onChange={(e) => setNewSubjectCode(e.target.value)}
-                    className="w-20 px-3 py-1.5 rounded-lg border border-border text-xs bg-surface"
+                    className="clay-inset w-20 px-3 py-2 rounded-xl text-xs text-slate-800 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={handleCreateSubject}
-                    className="px-3 py-1.5 bg-accent text-white rounded-lg text-xs"
+                    className="clay-btn-teal px-3.5 py-2 rounded-xl text-xs font-bold"
                   >
                     Add
                   </button>
@@ -733,7 +735,7 @@ NOTIFY pgrst, 'reload schema';`;
                 <select
                   value={selectedSubjectId}
                   onChange={(e) => setSelectedSubjectId(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface"
+                  className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-accent font-medium bg-[#eaf0f7]"
                 >
                   {subjects.map((sub) => (
                     <option key={sub.id} value={sub.id}>
@@ -745,8 +747,8 @@ NOTIFY pgrst, 'reload schema';`;
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-ink mb-1 flex items-center space-x-1">
-                <Clock className="w-3.5 h-3.5 text-ink-muted" />
+              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center space-x-1.5">
+                <Clock className="w-3.5 h-3.5 text-accent" />
                 <span>Time Limit (Minutes)</span>
               </label>
               <input
@@ -755,13 +757,13 @@ NOTIFY pgrst, 'reload schema';`;
                 max="240"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(parseInt(e.target.value, 10) || 20)}
-                className="w-full px-3.5 py-2 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface tabular-nums"
+                className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-accent tabular-nums font-semibold"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-ink mb-1 flex items-center space-x-1">
-                <Award className="w-3.5 h-3.5 text-ink-muted" />
+              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center space-x-1.5">
+                <Award className="w-3.5 h-3.5 text-accent" />
                 <span>Passing Percentage (%)</span>
               </label>
               <input
@@ -770,36 +772,36 @@ NOTIFY pgrst, 'reload schema';`;
                 max="100"
                 value={passingPercentage}
                 onChange={(e) => setPassingPercentage(parseInt(e.target.value, 10) || 70)}
-                className="w-full px-3.5 py-2 rounded-xl border border-border text-xs focus:outline-none focus:border-accent bg-surface tabular-nums"
+                className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-accent tabular-nums font-semibold"
               />
             </div>
           </div>
 
           {/* Shuffling Options Required by User */}
-          <div className="bg-surface rounded-xl p-4 border border-border space-y-3">
-            <p className="text-xs font-semibold text-ink flex items-center space-x-1.5">
+          <div className="clay-surface-sm rounded-2xl p-4 sm:p-5 space-y-3">
+            <p className="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
               <Shuffle className="w-3.5 h-3.5 text-accent" />
               <span>Exam Shuffling Rules</span>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <label className="flex items-center space-x-2.5 cursor-pointer">
+              <label className="flex items-center space-x-2.5 cursor-pointer font-medium text-slate-700">
                 <input
                   type="checkbox"
                   checked={shuffleQuestions}
                   onChange={(e) => setShuffleQuestions(e.target.checked)}
                   className="rounded text-accent focus:ring-accent w-4 h-4"
                 />
-                <span className="text-ink">Shuffle questions order for each student</span>
+                <span>Shuffle questions order for each student</span>
               </label>
 
-              <label className="flex items-center space-x-2.5 cursor-pointer">
+              <label className="flex items-center space-x-2.5 cursor-pointer font-medium text-slate-700">
                 <input
                   type="checkbox"
                   checked={shuffleChoices}
                   onChange={(e) => setShuffleChoices(e.target.checked)}
                   className="rounded text-accent focus:ring-accent w-4 h-4"
                 />
-                <span className="text-ink">Shuffle choices (A, B, C, D) inside questions</span>
+                <span>Shuffle choices (A, B, C, D) inside questions</span>
               </label>
             </div>
           </div>
@@ -811,7 +813,7 @@ NOTIFY pgrst, 'reload schema';`;
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-serif text-lg font-semibold text-ink">
+              <h3 className="font-sans text-lg font-bold text-ink">
                 Parsed Questions Preview ({parsedQuestions.length} Items)
               </h3>
               <p className="text-xs text-ink-muted">
@@ -822,7 +824,7 @@ NOTIFY pgrst, 'reload schema';`;
             <button
               onClick={handlePublishQuiz}
               disabled={isSavingExam}
-              className="px-5 py-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-all shadow-sm flex items-center justify-center space-x-1.5 active:scale-95 disabled:opacity-60"
+              className="clay-btn-teal px-5 py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center space-x-1.5 disabled:opacity-60"
             >
               {isSavingExam ? (
                 <>
@@ -839,24 +841,24 @@ NOTIFY pgrst, 'reload schema';`;
           </div>
 
           {cloudSaveError && (
-            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 text-xs text-amber-900 space-y-3">
-              <div className="flex items-center space-x-2 font-semibold text-amber-800">
+            <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-xs text-amber-900 space-y-3 shadow-clay-sm">
+              <div className="flex items-center space-x-2 font-bold text-amber-800">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                 <span>Supabase Cloud Sync Notice</span>
               </div>
-              <p>
+              <p className="font-medium">
                 The exam is saved on this computer, but failed to sync to your Supabase Cloud database: <strong>{cloudSaveError}</strong>.
                 Students on other devices will not see this exam until Supabase tables and credentials are valid.
               </p>
 
               {(cloudSaveError.toLowerCase().includes('source_filename') || cloudSaveError.toLowerCase().includes('schema cache')) && (
-                <div className="bg-[#1f201d] text-amber-200 rounded-lg p-3 space-y-2 border border-amber-600/30">
-                  <div className="flex items-center justify-between text-amber-400 font-sans font-semibold text-[11px]">
+                <div className="bg-[#1f201d] text-amber-200 rounded-xl p-3.5 space-y-2 border border-amber-600/30">
+                  <div className="flex items-center justify-between text-amber-400 font-sans font-bold text-[11px]">
                     <span>Fix in Supabase SQL Editor:</span>
                     <button
                       type="button"
                       onClick={handleCopyQuickFixSql}
-                      className="px-2 py-0.5 rounded bg-amber-600 hover:bg-amber-700 text-white font-medium flex items-center space-x-1"
+                      className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold flex items-center space-x-1"
                     >
                       {copiedMigrationSql ? (
                         <>
@@ -885,7 +887,7 @@ NOTIFY pgrst, 'reload schema';`}
                   type="button"
                   disabled={isRetryingSync}
                   onClick={handleRetrySync}
-                  className="px-3.5 py-1.5 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors flex items-center space-x-1.5 disabled:opacity-60 shadow-sm"
+                  className="clay-btn-teal px-3.5 py-2 rounded-xl text-white font-bold flex items-center space-x-1.5 disabled:opacity-60"
                 >
                   {isRetryingSync ? (
                     <>
@@ -902,15 +904,15 @@ NOTIFY pgrst, 'reload schema';`}
                 <button
                   type="button"
                   onClick={() => setIsSupabaseModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700 transition-colors flex items-center space-x-1"
+                  className="clay-btn-neutral px-3.5 py-2 rounded-xl text-amber-800 font-bold flex items-center space-x-1"
                 >
-                  <Settings className="w-3.5 h-3.5" />
+                  <Settings className="w-3.5 h-3.5 text-accent" />
                   <span>Open Database Configuration</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setCurrentView('home')}
-                  className="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-800 hover:bg-amber-100/50 transition-colors"
+                  className="clay-btn-neutral px-3.5 py-2 rounded-xl text-slate-700 font-bold"
                 >
                   View in Dashboard
                 </button>
@@ -919,59 +921,59 @@ NOTIFY pgrst, 'reload schema';`}
           )}
 
           {parseWarnings.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 space-y-1">
-              <p className="font-semibold">Parser Notifications:</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 space-y-1 shadow-clay-sm">
+              <p className="font-bold">Parser Notifications:</p>
               {parseWarnings.map((w, i) => (
-                <p key={i} className="text-[11px]">• {w}</p>
+                <p key={i} className="text-[11px] font-medium">• {w}</p>
               ))}
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {parsedQuestions.map((pq, qIdx) => (
               <div
                 key={qIdx}
-                className="bg-ground border border-border rounded-xl p-4 space-y-3 group"
+                className="clay-surface-sm p-4 sm:p-5 rounded-2xl space-y-3 group"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="w-6 h-6 rounded bg-surface border border-border text-ink-muted flex items-center justify-center text-xs font-semibold tabular-nums flex-shrink-0">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="w-7 h-7 rounded-xl clay-surface-sm text-accent flex items-center justify-center text-xs font-bold tabular-nums flex-shrink-0 shadow-xs">
                     {qIdx + 1}
                   </span>
-                  <p className="flex-1 text-xs font-medium text-ink">
+                  <p className="flex-1 text-xs font-bold text-slate-800 leading-relaxed pt-0.5">
                     {pq.questionText}
                   </p>
                   <button
                     type="button"
                     onClick={() => handleDeleteQuestion(qIdx)}
-                    className="p-1 rounded text-ink-muted hover:text-negative hover:bg-negative-bg/50 transition-colors opacity-60 group-hover:opacity-100"
+                    className="clay-btn-neutral p-1.5 rounded-xl text-rose-500 hover:text-rose-700 transition-colors opacity-70 group-hover:opacity-100"
                     title="Delete item"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pl-0 sm:pl-10">
                   {pq.choices.map((c, cIdx) => (
                     <button
                       type="button"
                       key={cIdx}
                       onClick={() => handleToggleChoiceCorrect(qIdx, cIdx)}
-                      className={`px-3 py-2 rounded-lg border text-xs flex items-center justify-between text-left transition-colors ${
+                      className={`px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between text-left transition-all ${
                         c.isCorrect
-                          ? 'bg-positive-bg/40 border-positive/50 text-positive-ink font-semibold shadow-xs'
-                          : 'bg-surface border-border text-ink-muted hover:border-accent/40 hover:bg-[#f0f0ee]'
+                          ? 'clay-inset-sm border border-emerald-300 bg-emerald-50 text-emerald-950 font-bold shadow-xs'
+                          : 'clay-surface-sm text-slate-600 hover:text-slate-900'
                       }`}
                       title={c.isCorrect ? 'Correct answer key' : 'Click to set as correct answer'}
                     >
-                      <span className="truncate pr-2">
-                        {c.label}. {c.text}
+                      <span className="truncate pr-2 font-medium">
+                        <strong className="text-slate-700">{c.label}.</strong> {c.text}
                       </span>
                       {c.isCorrect ? (
-                        <span className="text-[10px] text-positive uppercase font-bold px-1.5 py-0.5 rounded bg-white/80 border border-positive/30 flex-shrink-0">
+                        <span className="clay-surface-pill px-2 py-0.5 text-[10px] text-emerald-700 uppercase font-black bg-white border border-emerald-300 flex-shrink-0 shadow-xs">
                           Correct
                         </span>
                       ) : (
-                        <span className="text-[10px] text-ink-muted opacity-0 group-hover:opacity-60 flex-shrink-0">
+                        <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-60 flex-shrink-0">
                           Set
                         </span>
                       )}
@@ -980,7 +982,7 @@ NOTIFY pgrst, 'reload schema';`}
                 </div>
 
                 {pq.explanation && (
-                  <p className="pl-8 text-[11px] text-ink-muted italic">
+                  <p className="pl-0 sm:pl-10 text-[11px] text-slate-500 italic font-medium">
                     Rationale: {pq.explanation}
                   </p>
                 )}

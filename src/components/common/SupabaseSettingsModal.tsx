@@ -247,16 +247,16 @@ NOTIFY pgrst, 'reload schema';`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-ground border border-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="clay-surface rounded-3xl w-full max-w-lg shadow-clay-lg overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/60 bg-white/40">
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+            <div className="w-9 h-9 rounded-xl bg-teal-500/15 flex items-center justify-center text-accent shadow-clay-sm">
               <Database className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-semibold text-ink leading-tight">
+              <h3 className="font-sans text-base font-bold text-ink leading-tight">
                 Database Configuration
               </h3>
               <p className="text-xs text-ink-muted">
@@ -266,30 +266,30 @@ NOTIFY pgrst, 'reload schema';`;
           </div>
           <button
             onClick={() => setIsSupabaseModalOpen(false)}
-            className="p-1 rounded-full text-ink-muted hover:text-ink hover:bg-ground transition-colors"
+            className="clay-btn-neutral p-1.5 rounded-xl text-ink-muted hover:text-ink"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-border px-6 bg-ground">
+        <div className="flex border-b border-slate-200/60 px-6 py-2 bg-[#eef2f7] space-x-2">
           <button
             onClick={() => setActiveTab('settings')}
-            className={`py-2.5 text-xs font-medium border-b-2 mr-6 transition-colors ${
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all ${
               activeTab === 'settings'
-                ? 'border-accent text-accent font-semibold'
-                : 'border-transparent text-ink-muted hover:text-ink'
+                ? 'clay-inset-sm text-accent bg-teal-50 border border-teal-200/50 shadow-clay-inset'
+                : 'clay-surface-sm text-slate-600 hover:text-slate-900'
             }`}
           >
             API Credentials & Sync
           </button>
           <button
             onClick={() => setActiveTab('sql')}
-            className={`py-2.5 text-xs font-medium border-b-2 transition-colors ${
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition-all ${
               activeTab === 'sql'
-                ? 'border-accent text-accent font-semibold'
-                : 'border-transparent text-ink-muted hover:text-ink'
+                ? 'clay-inset-sm text-accent bg-teal-50 border border-teal-200/50 shadow-clay-inset'
+                : 'clay-surface-sm text-slate-600 hover:text-slate-900'
             }`}
           >
             SQL Migration Schema
@@ -301,19 +301,19 @@ NOTIFY pgrst, 'reload schema';`;
           {activeTab === 'settings' ? (
             <div className="space-y-4">
               {/* Status Box */}
-              <div className={`p-3.5 rounded-xl border text-xs flex items-start space-x-3 ${
+              <div className={`p-4 rounded-2xl border text-xs flex items-start space-x-3 shadow-clay-sm font-medium ${
                 supabaseConfig.isConfigured 
-                  ? 'bg-positive-bg/40 border-positive/30 text-positive-ink' 
-                  : 'bg-warning-bg/40 border-warning/30 text-warning-ink'
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900' 
+                  : 'bg-amber-50 border-amber-300 text-amber-900'
               }`}>
-                <div className="w-2 h-2 rounded-full bg-current mt-1 flex-shrink-0" />
+                <div className="w-2.5 h-2.5 rounded-full bg-current mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-semibold">
+                  <p className="font-bold">
                     {supabaseConfig.isConfigured
                       ? 'Live Supabase Connection Configured'
                       : 'Running in Local Storage Mode'}
                   </p>
-                  <p className="mt-0.5 opacity-90 leading-relaxed">
+                  <p className="mt-0.5 opacity-90 leading-relaxed font-normal">
                     {supabaseConfig.isConfigured
                       ? 'QuizRev is actively synchronizing exams, student accounts, and test attempts to your Supabase backend.'
                       : 'Data is currently saved only on this machine. Enter your Supabase Project URL and Anon Key below to automatically save and share mock exams across all devices.'}
@@ -323,22 +323,22 @@ NOTIFY pgrst, 'reload schema';`;
 
               {/* Cloud Sync Actions Bar (When Configured) */}
               {supabaseConfig.isConfigured && (
-                <div className="p-3 bg-surface border border-border rounded-xl space-y-2">
+                <div className="clay-surface-sm p-4 rounded-2xl space-y-2.5 shadow-clay-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-ink">Cloud Data Synchronization</span>
+                    <span className="text-xs font-bold text-slate-800">Cloud Data Synchronization</span>
                     {isSyncingWithSupabase && (
-                      <span className="text-[11px] text-accent flex items-center space-x-1 animate-pulse">
+                      <span className="text-[11px] font-bold text-accent flex items-center space-x-1 animate-pulse">
                         <Loader2 className="w-3 h-3 animate-spin" />
                         <span>Syncing...</span>
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       disabled={isSyncingWithSupabase}
                       onClick={handlePushToCloud}
-                      className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium hover:bg-accent-hover transition-colors flex items-center space-x-1.5"
+                      className="clay-btn-teal px-3.5 py-1.5 rounded-xl text-white text-xs font-bold flex items-center space-x-1.5"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
                       <span>Push Local Data to Supabase</span>
@@ -347,9 +347,9 @@ NOTIFY pgrst, 'reload schema';`;
                       type="button"
                       disabled={isSyncingWithSupabase}
                       onClick={handlePullFromCloud}
-                      className="px-3 py-1.5 rounded-lg border border-border bg-ground text-ink text-xs font-medium hover:bg-surface transition-colors flex items-center space-x-1.5"
+                      className="clay-btn-neutral px-3.5 py-1.5 rounded-xl text-slate-700 text-xs font-bold flex items-center space-x-1.5"
                     >
-                      <RefreshCw className="w-3.5 h-3.5" />
+                      <RefreshCw className="w-3.5 h-3.5 text-accent" />
                       <span>Pull Cloud Data</span>
                     </button>
                   </div>
@@ -357,15 +357,15 @@ NOTIFY pgrst, 'reload schema';`;
               )}
 
               {syncFeedback && (
-                <div className={`p-3 rounded-xl border text-xs flex items-center space-x-2 ${
+                <div className={`p-3.5 rounded-2xl border text-xs flex items-center space-x-2 font-medium shadow-clay-sm ${
                   syncFeedback.success
-                    ? 'bg-positive-bg/40 border-positive/30 text-positive-ink'
-                    : 'bg-negative-bg/50 border-negative/30 text-negative-ink'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                    : 'bg-rose-50 border-rose-300 text-rose-800'
                 }`}>
                   {syncFeedback.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-positive flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-negative flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                   )}
                   <span>{syncFeedback.message}</span>
                 </div>
@@ -373,8 +373,8 @@ NOTIFY pgrst, 'reload schema';`;
 
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
-                    <Globe className="w-3.5 h-3.5 text-ink-muted" />
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center space-x-1.5">
+                    <Globe className="w-3.5 h-3.5 text-accent" />
                     <span>Supabase Project URL *</span>
                   </label>
                   <input
@@ -383,13 +383,13 @@ NOTIFY pgrst, 'reload schema';`;
                     placeholder="https://xyzcompany.supabase.co"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-surface"
+                    className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-ink mb-1.5 flex items-center space-x-1">
-                    <Key className="w-3.5 h-3.5 text-ink-muted" />
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center space-x-1.5">
+                    <Key className="w-3.5 h-3.5 text-accent" />
                     <span>Supabase Anon Public API Key *</span>
                   </label>
                   <input
@@ -398,31 +398,31 @@ NOTIFY pgrst, 'reload schema';`;
                     placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                     value={anonKey}
                     onChange={(e) => setAnonKey(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-border text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-surface font-mono"
+                    className="clay-inset w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent font-mono"
                   />
                 </div>
 
                 {testResult && (
-                  <div className={`p-3 rounded-xl border text-xs flex items-center space-x-2 ${
+                  <div className={`p-3.5 rounded-2xl border text-xs flex items-center space-x-2 font-medium shadow-clay-sm ${
                     testResult.success
-                      ? 'bg-positive-bg/40 border-positive/30 text-positive-ink'
-                      : 'bg-negative-bg/50 border-negative/30 text-negative-ink'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                      : 'bg-rose-50 border-rose-300 text-rose-800'
                   }`}>
                     {testResult.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-positive flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                     ) : (
-                      <AlertCircle className="w-4 h-4 text-negative flex-shrink-0" />
+                      <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                     )}
                     <span>{testResult.message}</span>
                   </div>
                 )}
 
-                <div className="pt-2 flex items-center justify-between border-t border-rule">
+                <div className="pt-2 flex items-center justify-between border-t border-slate-200/60">
                   <button
                     type="button"
                     disabled={isTesting || !url.trim() || !anonKey.trim()}
                     onClick={handleTestConnection}
-                    className="px-3.5 py-2 rounded-control border border-border text-xs font-medium text-ink bg-ground hover:bg-surface transition-colors flex items-center space-x-1.5 disabled:opacity-50"
+                    className="clay-btn-neutral px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 flex items-center space-x-1.5 disabled:opacity-50"
                   >
                     {isTesting ? (
                       <>
@@ -437,7 +437,7 @@ NOTIFY pgrst, 'reload schema';`;
                   <div className="flex items-center space-x-2">
                     <button
                       type="submit"
-                      className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors shadow-sm flex items-center space-x-1.5"
+                      className="clay-btn-teal px-5 py-2 rounded-xl text-white text-xs font-bold flex items-center space-x-1.5"
                     >
                       {saveSuccess ? (
                         <>
@@ -455,16 +455,16 @@ NOTIFY pgrst, 'reload schema';`;
           ) : (
             <div className="space-y-4">
               {/* Quick Fix Card for Existing Databases */}
-              <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2 shadow-clay-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-amber-900 flex items-center space-x-1.5">
+                  <span className="text-xs font-bold text-amber-900 flex items-center space-x-1.5">
                     <Database className="w-3.5 h-3.5 text-amber-600" />
                     <span>Quick Fix: Missing Column / Schema Cache Error</span>
                   </span>
                   <button
                     type="button"
                     onClick={copyMigrationSql}
-                    className="flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm"
+                    className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm"
                   >
                     {copiedFix ? (
                       <>
@@ -479,10 +479,10 @@ NOTIFY pgrst, 'reload schema';`;
                     )}
                   </button>
                 </div>
-                <p className="text-[11px] text-amber-800 leading-relaxed">
+                <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
                   If you see <em>"Could not find the 'source_filename' column of 'quizzes' in the schema cache"</em>, your existing database tables just need these new columns added:
                 </p>
-                <div className="bg-[#1f201d] text-amber-200 p-2.5 rounded-lg font-mono text-[11px] overflow-x-auto">
+                <div className="bg-[#1f201d] text-amber-200 p-3 rounded-xl font-mono text-[11px] overflow-x-auto shadow-inner">
                   <code>ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_filename TEXT;</code><br />
                   <code>ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS source_format TEXT DEFAULT 'manual';</code><br />
                   <code>ALTER TABLE public.quizzes ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true;</code><br />
@@ -491,28 +491,28 @@ NOTIFY pgrst, 'reload schema';`;
               </div>
 
               <div className="flex items-center justify-between">
-                <p className="text-xs text-ink-muted">
+                <p className="text-xs font-bold text-slate-700">
                   Full Database Setup Schema:
                 </p>
                 <button
                   onClick={copySqlSchema}
-                  className="flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-medium border border-border hover:bg-surface text-ink transition-colors"
+                  className="clay-btn-neutral flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700"
                 >
                   {copied ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-positive" />
-                      <span className="text-positive">Copied!</span>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700">Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3.5 h-3.5 text-accent" />
                       <span>Copy Full SQL</span>
                     </>
                   )}
                 </button>
               </div>
 
-              <div className="bg-[#1f201d] text-[#e0e0e0] p-3.5 rounded-xl font-mono text-[11px] max-h-60 overflow-y-auto leading-relaxed border border-border">
+              <div className="bg-[#1f201d] text-[#e0e0e0] p-4 rounded-2xl font-mono text-[11px] max-h-60 overflow-y-auto leading-relaxed border border-slate-700/60 shadow-inner">
                 <pre>
 {`-- 1. Profiles Table
 CREATE TABLE public.profiles (

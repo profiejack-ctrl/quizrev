@@ -4,19 +4,19 @@
 
 @layer base {
   :root {
-    --ground: #ffffff;
-    --surface: #f9f9f9;
+    --ground: #eef2f7;
+    --surface: #f4f7fb;
     --raised: #ffffff;
-    --border: #eaeaea;
-    --rule: #f3f3f3;
-    --control: #d9d9d6;
-    --ink: #1f201d;
-    --ink-muted: #636361;
-    --ink-subtle: #8c8c88;
-    --accent: #1b6e66;
-    --positive: #2e7d32;
-    --negative: #b42318;
-    --warning: #92400e;
+    --border: rgba(255, 255, 255, 0.7);
+    --rule: rgba(166, 178, 198, 0.25);
+    --control: #dce4ef;
+    --ink: #1e293b;
+    --ink-muted: #475569;
+    --ink-subtle: #64748b;
+    --accent: #0d9488;
+    --positive: #059669;
+    --negative: #e11d48;
+    --warning: #d97706;
   }
 
   html {
@@ -37,20 +37,147 @@
   }
 }
 
-/* Custom scrollbar for mobile drawers & code previews */
+@layer components {
+  /* Tactile Claymorphism & Neumorphism Surfaces */
+  .clay-surface {
+    background: linear-gradient(145deg, #f7faff, #e8edf5);
+    border-radius: 1.5rem;
+    box-shadow: 
+      8px 8px 18px rgba(166, 178, 198, 0.45),
+      -8px -8px 18px rgba(255, 255, 255, 0.95),
+      inset 1px 1px 2px rgba(255, 255, 255, 0.9),
+      inset -1px -1px 2px rgba(166, 178, 198, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+
+  .clay-surface-sm {
+    background: linear-gradient(145deg, #f7faff, #e8edf5);
+    border-radius: 1rem;
+    box-shadow: 
+      4px 4px 10px rgba(166, 178, 198, 0.4),
+      -4px -4px 10px rgba(255, 255, 255, 0.9),
+      inset 1px 1px 1.5px rgba(255, 255, 255, 0.8),
+      inset -1px -1px 1.5px rgba(166, 178, 198, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+
+  .clay-surface-pill {
+    background: linear-gradient(145deg, #f7faff, #e8edf5);
+    border-radius: 9999px;
+    box-shadow: 
+      3px 3px 8px rgba(166, 178, 198, 0.35),
+      -3px -3px 8px rgba(255, 255, 255, 0.9),
+      inset 1px 1px 1px rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  /* Inset / Pressed Wells for Inputs & Active States */
+  .clay-inset {
+    background-color: #eaf0f7;
+    box-shadow: 
+      inset 4px 4px 8px rgba(166, 178, 198, 0.5),
+      inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  .clay-inset-sm {
+    background-color: #eaf0f7;
+    box-shadow: 
+      inset 2px 2px 5px rgba(166, 178, 198, 0.45),
+      inset -2px -2px 5px rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  /* Tactile Interactive Buttons */
+  .clay-btn {
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .clay-btn:active {
+    transform: translateY(2px) scale(0.98);
+  }
+
+  .clay-btn-teal {
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    color: #ffffff;
+    box-shadow: 
+      5px 5px 12px rgba(13, 148, 136, 0.35),
+      -4px -4px 10px rgba(255, 255, 255, 0.8),
+      inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.4),
+      inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .clay-btn-teal:hover {
+    background: linear-gradient(135deg, #2dd4bf, #0f766e);
+    box-shadow: 
+      6px 6px 16px rgba(13, 148, 136, 0.45),
+      -5px -5px 12px rgba(255, 255, 255, 0.9),
+      inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.5);
+  }
+  .clay-btn-teal:active {
+    box-shadow: 
+      2px 2px 5px rgba(13, 148, 136, 0.3),
+      inset 2px 2px 5px rgba(0, 0, 0, 0.25);
+  }
+
+  .clay-btn-neutral {
+    background: linear-gradient(135deg, #ffffff, #e6ecf5);
+    color: #1e293b;
+    box-shadow: 
+      4px 4px 10px rgba(166, 178, 198, 0.4),
+      -4px -4px 10px rgba(255, 255, 255, 0.95),
+      inset 1px 1px 2px rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+  }
+  .clay-btn-neutral:hover {
+    background: linear-gradient(135deg, #ffffff, #edf2f9);
+    box-shadow: 
+      5px 5px 12px rgba(166, 178, 198, 0.5),
+      -5px -5px 12px rgba(255, 255, 255, 1);
+  }
+  .clay-btn-neutral:active {
+    box-shadow: 
+      inset 3px 3px 6px rgba(166, 178, 198, 0.45),
+      inset -3px -3px 6px rgba(255, 255, 255, 0.8);
+  }
+
+  .clay-btn-coral {
+    background: linear-gradient(135deg, #f43f5e, #e11d48);
+    color: #ffffff;
+    box-shadow: 
+      5px 5px 12px rgba(225, 29, 72, 0.35),
+      -4px -4px 10px rgba(255, 255, 255, 0.8),
+      inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.4),
+      inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .clay-btn-coral:hover {
+    background: linear-gradient(135deg, #fb7185, #be123c);
+    box-shadow: 
+      6px 6px 16px rgba(225, 29, 72, 0.45),
+      -5px -5px 12px rgba(255, 255, 255, 0.9);
+  }
+  .clay-btn-coral:active {
+    box-shadow: 
+      2px 2px 5px rgba(225, 29, 72, 0.3),
+      inset 2px 2px 5px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Custom scrollbar for mobile drawers & preview lists */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f9f9f9;
+  background: #eef2f7;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d9d9d6;
+  background: #cbd5e1;
   border-radius: 999px;
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #636361;
+  background: #94a3b8;
 }
 
 /* Mobile-first bottom safe area support */
